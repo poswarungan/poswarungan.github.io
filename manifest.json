@@ -1,6 +1,6 @@
 {
-  "name": "POS Warung",
-  "short_name": "POS Warung",
+  "name": "Point of Sale Warungan",
+  "short_name": "POS Warungan",
   "description": "Aplikasi Point of Sale untuk warung & restoran — kasir, menu, stok, dan laporan dalam satu tempat.",
   "start_url": "./index.html",
   "scope": "./",
