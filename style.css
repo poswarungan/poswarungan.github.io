@@ -362,7 +362,7 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .dt-thumb-ph { width: 44px; height: 44px; border-radius: var(--radius-lg); background: #f5f5f5; display: inline-flex; align-items: center; justify-content: center; color: #ccc; border: 1px solid #e8e8e8; }
 .upload-hint { color: #888; font-size: 13px; }
 
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1350; padding: 20px; }
 .modal { background: white; border-radius: 20px; width: 80%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,0.2); }
 .modal-header { padding: 24px 30px; background: var(--navy-primary); color: white; display: flex; justify-content: space-between; align-items: center; border-radius: 20px 20px 0 0; }
 .modal-header h3 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; margin: 0; }
@@ -531,7 +531,7 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .payment-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
 .payment-row:last-child { border-bottom: none; }
 
-.drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; }
+.drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1350; }
 .drawer { position: fixed; top: 0; right: -560px; width: 540px; max-width: 95vw; height: 100vh; background: white; z-index: 1001; box-shadow: -4px 0 24px rgba(0,0,0,0.15); transition: right 0.3s; overflow-y: auto; display: flex; flex-direction: column; }
 .drawer.open { right: 0; }
 .drawer-header { padding: 20px 24px; background: var(--navy-primary); color: white; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
@@ -602,6 +602,11 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .ppc-qty-badge.low { background: #c62828; }
 .ppc-add-btn { width: 30px; height: 30px; border-radius: 50%; background: var(--navy); color: white; border: none; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
 .pos-product-card:active .ppc-add-btn { transform: scale(0.9); }
+.ppc-stepper { display: flex; align-items: center; gap: 6px; background: var(--neutral-100); border-radius: 20px; padding: 3px; flex-shrink: 0; }
+.ppc-stepper button { width: 24px; height: 24px; border-radius: 50%; border: none; background: var(--navy); color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; flex-shrink: 0; }
+.ppc-stepper button:first-child { background: white; color: var(--navy); box-shadow: inset 0 0 0 1.5px var(--neutral-300); }
+.ppc-stepper button:active { transform: scale(0.88); }
+.ppc-stepper-qty { min-width: 16px; text-align: center; font-size: 13px; font-weight: 700; color: var(--navy-primary); }
 .pos-products-empty { padding: 30px 20px; text-align: center; color: #aaa; }
 
 .cart-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -751,7 +756,6 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .detail-stat-val { font-size: 22px; font-weight: 700; color: var(--navy-primary); }
 .detail-stat-lbl { font-size: 11px; color: #888; text-transform: uppercase; margin-top: 4px; }
 
-.mobile-toggle { display: none; }
 .sidebar-overlay { display: none; }
 @media (max-width: 1024px) {
   .dashboard-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -773,7 +777,6 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
   .sidebar.collapsed .sidebar-user-info { padding: 24px 20px; }
   .sidebar.collapsed .sidebar-avatar, .sidebar.collapsed .sidebar-avatar-initials { width: 70px; height: 70px; font-size: 26px; margin-bottom: 12px; }
   .sidebar-collapse-btn { display: none; }
-  .mobile-toggle { display: block; position: fixed; top: 10px; left: 10px; z-index: 1000; background: var(--navy-primary); color: white; border: none; padding: 10px 14px; border-radius: 14px; font-size: 18px; cursor: pointer; box-shadow: 0 8px 18px rgba(0,0,0,0.2); }
   .sidebar-overlay.show { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; }
   .main-content { padding: 12px 12px 84px; }
   .breadcrumb { padding: 10px 14px; border-radius: 14px; }

@@ -562,7 +562,6 @@ function DashboardLayout({ user, onLogout, onSwitchWarung, onUserUpdate }) {
 
   return (
     <div className="app-container">
-      <button className="mobile-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}><i className="fas fa-bars"></i></button>
       {sidebarOpen && <div className="sidebar-overlay show" onClick={() => setSidebarOpen(false)}></div>}
       <div className={`sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-brand" style={{padding: sidebarCollapsed ? '14px 8px' : '20px 24px', borderBottom:'1px solid rgba(255,255,255,0.1)', display:'flex', alignItems:'center', justifyContent:'space-between', minHeight:'62px'}}>
@@ -2590,7 +2589,6 @@ function POSView({ user }) {
       if (cu.success) { setCustomers(cu.data); swrSet('pos_customers', cu.data); }
       if (ca.success) { setCategories(ca.data); swrSet('pos_categories', ca.data); }
     });
-    setTimeout(() => searchRef.current?.focus(), 300);
   }, []);
 
   useEffect(() => {
@@ -2625,9 +2623,20 @@ function POSView({ user }) {
       return [...prev, { menu_item_id: menu.id, name: menu.name, price: menu.price, qty: 1, line_total: menu.price, max_qty: menu.track_stock ? menu.stock_qty : Infinity, notes: '' }];
     });
     setResults([]); setSearchQ('');
-    setTimeout(() => searchRef.current?.focus(), 100);
   };
   const removeFromCart = (idx) => setCart(prev => prev.filter((_, i) => i !== idx));
+  const decrementCartItem = (menuId) => {
+    setCart(prev => {
+      const idx = prev.findIndex(c => c.menu_item_id === menuId);
+      if (idx < 0) return prev;
+      const item = prev[idx];
+      if (item.qty <= 1) return prev.filter((_, i) => i !== idx);
+      const next = [...prev];
+      next[idx] = { ...item, qty: item.qty - 1, line_total: Math.round(item.price * (item.qty - 1) * 100) / 100 };
+      return next;
+    });
+  };
+  const cartQtyMap = React.useMemo(() => { const map = {}; cart.forEach(c => { map[c.menu_item_id] = c.qty; }); return map; }, [cart]);
   const updateCartQty = (idx, newQty) => setCart(prev => prev.map((item, i) => { if (i !== idx) return item; const q = Math.max(1, Math.min(parseInt(newQty) || 1, item.max_qty)); return { ...item, qty: q, line_total: Math.round(item.price * q * 100) / 100 }; }));
   const updateCartNotes = (idx, val) => setCart(prev => prev.map((item, i) => i === idx ? { ...item, notes: val } : item));
 
@@ -2713,15 +2722,29 @@ function POSView({ user }) {
           <div className="pos-products-wrap" style={{maxHeight: cart.length > 0 ? '320px' : '500px', overflowY:'auto'}}>
             {menuLoading ? (<div style={{padding:'30px 20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px'}}><div className="loading-progress" style={{width:'160px'}}><div className="loading-progress-bar"></div></div><span style={{fontSize:'13px', color:'#888'}}>Memuat menu...</span></div>) : displayMenu.length > 0 ? (
               <div className="pos-product-grid">
-                {displayMenu.map(m => (
+                {displayMenu.map(m => {
+                  const qtyInCart = cartQtyMap[m.id] || 0;
+                  return (
                   <div key={m.id} className="pos-product-card" onClick={() => addToCart(m)}>
-                    {m.track_stock && <span className={'ppc-qty-badge' + (m.stock_qty <= 5 ? ' low' : '')}><i className="fas fa-cubes"></i> Sisa {m.stock_qty}</span>}
+                    {!!m.track_stock && <span className={'ppc-qty-badge' + (m.stock_qty <= 5 ? ' low' : '')}><i className="fas fa-cubes"></i> Sisa {m.stock_qty}</span>}
                     {m.image ? <img src={'https://lh3.google.com/u/0/d/' + m.image} className="ppc-img" alt={m.name} /> : <div className="ppc-img-ph"><i className="fas fa-utensils"></i></div>}
                     <div className="ppc-serial">{m.name}</div>
                     <div className="ppc-meta">{m.category_name}</div>
-                    <div className="ppc-price"><span>{fmtRp(m.price)}</span><span className="ppc-add-btn"><i className="fas fa-plus"></i></span></div>
+                    <div className="ppc-price">
+                      <span>{fmtRp(m.price)}</span>
+                      {qtyInCart === 0 ? (
+                        <span className="ppc-add-btn"><i className="fas fa-plus"></i></span>
+                      ) : (
+                        <span className="ppc-stepper" onClick={(e) => e.stopPropagation()}>
+                          <button onClick={() => decrementCartItem(m.id)}><i className="fas fa-minus"></i></button>
+                          <span className="ppc-stepper-qty">{qtyInCart}</span>
+                          <button onClick={() => addToCart(m)}><i className="fas fa-plus"></i></button>
+                        </span>
+                      )}
+                    </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (<div className="empty-state" style={{padding:'32px 20px'}}><i className="fas fa-utensils"></i><p>{searchQ ? 'Tidak ditemukan' : 'Belum ada menu di kategori ini'}</p><div className="empty-state-sub">{searchQ ? <>Tidak ada menu yang cocok dengan "{searchQ}"</> : 'Coba pilih kategori lain, atau tambahkan menu baru dari halaman Menu.'}</div></div>)}
           </div>
