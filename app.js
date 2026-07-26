@@ -156,6 +156,23 @@ const { useState, useEffect, useRef } = React;
 function dtCleanup() { while ($.fn.dataTable.ext.search.length > 0) $.fn.dataTable.ext.search.pop(); }
 
 /* ── SearchableDropdown ── */
+/* ── Filter yang bisa dilipat — dipakai di semua halaman list, supaya tidak menghabiskan tinggi layar (brief poin 6) ── */
+function FilterPanel({ title = 'Filter', onClear, children, defaultOpen }) {
+  const [open, setOpen] = useState(() => defaultOpen !== undefined ? defaultOpen : (typeof window !== 'undefined' ? window.innerWidth > 768 : true));
+  return (
+    <div className="filters-section">
+      <div className="filters-header" onClick={() => setOpen(o => !o)} style={{cursor:'pointer'}}>
+        <h3><i className="fas fa-filter"></i> {title}</h3>
+        <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+          {onClear && <button className="btn btn-secondary btn-sm" onClick={(e) => { e.stopPropagation(); onClear(); }}><i className="fas fa-times-circle"></i> Bersihkan</button>}
+          <i className={'fas fa-chevron-' + (open ? 'up' : 'down')} style={{color:'var(--navy-primary)'}}></i>
+        </div>
+      </div>
+      {open && <div className="filters-grid">{children}</div>}
+    </div>
+  );
+}
+
 function SearchableDropdown({ options, value, onChange, placeholder='Pilih...', label, icon, required=false }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -377,7 +394,7 @@ function OnboardingView({ onConnected }) {
     <div className="login-container">
       <div className="login-box">
         <div className="login-logo-ico"><i className="fas fa-utensils"></i></div>
-        <h2>Point of Sale Warungan</h2>
+        <h2>Point of Sale Warung</h2>
         {mode === 'connect'
           ? <ConnectWarungForm onConnected={onConnected} onSwitchMode={() => setMode('register')} />
           : <RegisterWarungForm onConnected={onConnected} onSwitchMode={() => setMode('connect')} />}
@@ -560,28 +577,47 @@ function DashboardLayout({ user, onLogout, onSwitchWarung, onUserUpdate }) {
           <div className="sidebar-user-name">{user.full_name}</div>
           <div className="sidebar-user-role">{ROLE_LABELS[user.role] || user.role}</div>
         </div>
+        <div className="sidebar-menu-groups">
         <div className="sidebar-menu-section">
-          <div className="sidebar-menu-title">Navigasi</div>
+          <div className="sidebar-menu-title">Operasional</div>
           <ul className="sidebar-menu">
             <li><button className={activeMenu==='dashboard'?'active':''} onClick={() => navigate('dashboard')}><i className="fas fa-chart-line"></i><span>Dashboard</span></button></li>
             {canSeeSales && <li><button className={activeMenu==='pos'?'active':''} onClick={() => navigate('pos')}><i className="fas fa-cash-register"></i><span>Kasir / Pesanan Baru</span></button></li>}
             {canSeeSales && <li><button className={activeMenu==='sales'?'active':''} onClick={() => navigate('sales')}><i className="fas fa-receipt"></i><span>Daftar Transaksi</span></button></li>}
             {canSeeCustomers && <li><button className={activeMenu==='customers'||activeMenu==='customer_ledger'?'active':''} onClick={() => navigate('customers')}><i className="fas fa-user-friends"></i><span>Pelanggan</span></button></li>}
-            <li><button className={activeMenu==='menu'?'active':''} onClick={() => navigate('menu')}><i className="fas fa-utensils"></i><span>Menu</span></button></li>
-            {canSeePurchases && <li><button className={activeMenu==='purchases'||activeMenu==='purchase_detail'?'active':''} onClick={() => navigate('purchases')}><i className="fas fa-shopping-cart"></i><span>Pembelian Bahan Baku</span></button></li>}
-            {canSeeSuppliers && <li><button className={activeMenu==='suppliers'||activeMenu==='supplier_ledger'?'active':''} onClick={() => navigate('suppliers')}><i className="fas fa-handshake"></i><span>Supplier</span></button></li>}
-            {canSeePayments && <li><button className={activeMenu==='payments'?'active':''} onClick={() => navigate('payments')}><i className="fas fa-money-bill-wave"></i><span>Pembayaran</span></button></li>}
-            {canSeeExpenses && <li><button className={activeMenu==='expenses'?'active':''} onClick={() => navigate('expenses')}><i className="fas fa-receipt"></i><span>Pengeluaran</span></button></li>}
             <li><button className={activeMenu==='due_reminders'?'active':''} onClick={() => navigate('due_reminders')}><i className="fas fa-bell" style={{color: activeMenu==='due_reminders' ? '' : '#c62828'}}></i><span>Pengingat Tagihan</span></button></li>
-            {(isAdmin || isManager) && <li><button className={activeMenu==='reports'?'active':''} onClick={() => navigate('reports')}><i className="fas fa-chart-bar"></i><span>Laporan</span></button></li>}
+          </ul>
+        </div>
+        {(canSeeCategories || canSeePurchases || canSeeSuppliers || canSeeImports) && (
+        <div className="sidebar-menu-section">
+          <div className="sidebar-menu-title">Inventori &amp; Pembelian</div>
+          <ul className="sidebar-menu">
+            <li><button className={activeMenu==='menu'?'active':''} onClick={() => navigate('menu')}><i className="fas fa-utensils"></i><span>Menu</span></button></li>
             {canSeeCategories && <li><button className={activeMenu==='categories'?'active':''} onClick={() => navigate('categories')}><i className="fas fa-th-large"></i><span>Kategori Menu</span></button></li>}
             {canSeeImports && <li><button className={activeMenu==='bulk_import'?'active':''} onClick={() => navigate('bulk_import')}><i className="fas fa-file-import"></i><span>Impor Massal Menu</span></button></li>}
+            {canSeeSuppliers && <li><button className={activeMenu==='suppliers'||activeMenu==='supplier_ledger'?'active':''} onClick={() => navigate('suppliers')}><i className="fas fa-handshake"></i><span>Supplier</span></button></li>}
+            {canSeePurchases && <li><button className={activeMenu==='purchases'||activeMenu==='purchase_detail'?'active':''} onClick={() => navigate('purchases')}><i className="fas fa-shopping-cart"></i><span>Pembelian Bahan Baku</span></button></li>}
+          </ul>
+        </div>)}
+        {(canSeePayments || canSeeExpenses || isAdmin || isManager) && (
+        <div className="sidebar-menu-section">
+          <div className="sidebar-menu-title">Keuangan</div>
+          <ul className="sidebar-menu">
+            {canSeePayments && <li><button className={activeMenu==='payments'?'active':''} onClick={() => navigate('payments')}><i className="fas fa-money-bill-wave"></i><span>Pembayaran</span></button></li>}
+            {canSeeExpenses && <li><button className={activeMenu==='expenses'?'active':''} onClick={() => navigate('expenses')}><i className="fas fa-receipt"></i><span>Pengeluaran</span></button></li>}
+            {(isAdmin || isManager) && <li><button className={activeMenu==='reports'?'active':''} onClick={() => navigate('reports')}><i className="fas fa-chart-bar"></i><span>Laporan</span></button></li>}
+          </ul>
+        </div>)}
+        <div className="sidebar-menu-section">
+          <div className="sidebar-menu-title">Lainnya</div>
+          <ul className="sidebar-menu">
             {isAdmin && <li><button className={activeMenu==='users'?'active':''} onClick={() => navigate('users')}><i className="fas fa-users-cog"></i><span>Manajemen Pengguna</span></button></li>}
             {isAdmin && <li><button className={activeMenu==='settings'?'active':''} onClick={() => navigate('settings')}><i className="fas fa-cog"></i><span>Pengaturan</span></button></li>}
             {isAdmin && <li><button className={activeMenu==='logs'?'active':''} onClick={() => navigate('logs')}><i className="fas fa-history"></i><span>Log Aktivitas</span></button></li>}
             <li><button className={activeMenu==='account'?'active':''} onClick={() => navigate('account')}><i className="fas fa-user-circle"></i><span>Akun Saya</span></button></li>
             <li><button className={activeMenu==='about'?'active':''} onClick={() => navigate('about')}><i className="fas fa-info-circle"></i><span>Tentang Aplikasi</span></button></li>
           </ul>
+        </div>
         </div>
         <div className="sidebar-logout"><button onClick={onLogout}><i className="fas fa-sign-out-alt"></i><span>Keluar</span></button></div>
         {onSwitchWarung && <div className="sidebar-logout"><button onClick={async () => { const r = await Swal.fire({ icon:'question', text:'Ganti ke warung lain? Anda perlu memasukkan Kode Warung lagi.', showCancelButton:true, confirmButtonText:'Ya, Ganti' }); if (r.isConfirmed) onSwitchWarung(); }}><i className="fas fa-exchange-alt"></i><span>Ganti Warung</span></button></div>}
@@ -593,8 +629,8 @@ function DashboardLayout({ user, onLogout, onSwitchWarung, onUserUpdate }) {
       </div>
       <div className="bottom-nav">
         <button className={'bnav-item' + (activeMenu==='dashboard'?' active':'')} onClick={() => navigate('dashboard')}><i className="fas fa-chart-line"></i><span>Home</span></button>
-        <button className={'bnav-item' + (activeMenu==='pos'?' active':'')} onClick={() => navigate('pos')}><i className="fas fa-cash-register"></i><span>Kasir</span></button>
         <button className={'bnav-item' + (activeMenu==='sales'?' active':'')} onClick={() => navigate('sales')}><i className="fas fa-receipt"></i><span>Transaksi</span></button>
+        <button className="bnav-fab" onClick={() => navigate('pos')} aria-label="Pesanan Baru"><i className="fas fa-cash-register"></i></button>
         <button className={'bnav-item' + (activeMenu==='menu'?' active':'')} onClick={() => navigate('menu')}><i className="fas fa-utensils"></i><span>Menu</span></button>
         <button className={'bnav-item'} onClick={() => setSidebarOpen(true)}><i className="fas fa-th"></i><span>Lainnya</span></button>
       </div>
@@ -710,15 +746,13 @@ function DashboardView({ user, onNavigate }) {
     { val: tk(s?.myTodaySalesAmt), lbl:'Penjualan Saya Hari Ini' }, { val: tk(s?.myTodayCollection), lbl:'Kas Masuk Saya' }, { val: tk(s?.myMonthSales), lbl:'Bulan Berjalan' }
   ];
 
-  const actions = role === 'admin' || role === 'manager' ? [
-    { id:'pos', ico:'fa-cash-register', color:'#2e7d32', title:'Pesanan Baru', sub:'Buka Kasir' },
+  const secondaryActions = role === 'admin' || role === 'manager' ? [
     { id:'menu', ico:'fa-utensils', color:'#6f42c1', title:'Menu', sub:'Kelola menu' },
     { id:'purchases', ico:'fa-shopping-cart', color:'#1565c0', title:'Pembelian', sub:'Bahan baku' },
     { id:'payments', ico:'fa-money-bill-wave', color:'#e65100', title:'Pembayaran', sub:'Lihat riwayat' },
     { id:'reports', ico:'fa-chart-bar', color:'#00838f', title:'Laporan', sub:'Laba rugi, dll' },
     { id:'expenses', ico:'fa-receipt', color:'#c62828', title:'Pengeluaran', sub:'Catat biaya' }
   ] : [
-    { id:'pos', ico:'fa-cash-register', color:'#2e7d32', title:'Pesanan Baru', sub:'Buka Kasir' },
     { id:'sales', ico:'fa-receipt', color:'#1565c0', title:'Transaksi Saya', sub:'Lihat riwayat' },
     { id:'customers', ico:'fa-user-friends', color:'#6f42c1', title:'Pelanggan', sub:'Cari / tambah' },
     { id:'due_reminders', ico:'fa-bell', color:'#e65100', title:'Pengingat Tagihan', sub:'Tagihan tertunda' }
@@ -733,13 +767,23 @@ function DashboardView({ user, onNavigate }) {
       <div className="dash-hero-stats">{heroStats.map((st, i) => (<div key={i}><div className="dash-hero-stat-val">{st.val}</div><div className="dash-hero-stat-lbl">{st.lbl}</div></div>))}</div>
     </div>
   );
-  const QuickActions = (<div className="dash-actions">{actions.map(a => (<button key={a.id} className="dash-action" onClick={() => go(a.id)}><div className="dash-action-ico" style={{background: a.color}}><i className={'fas ' + a.ico}></i></div><div className="dash-action-text"><div className="dash-action-title">{a.title}</div><div className="dash-action-sub">{a.sub}</div></div></button>))}</div>);
+  const PrimaryCTA = (
+    <button className="dash-cta-primary" onClick={() => go('pos')}>
+      <div className="dash-cta-primary-ico"><i className="fas fa-cash-register"></i></div>
+      <div className="dash-cta-primary-text"><div className="dash-cta-primary-title">Pesanan Baru</div><div className="dash-cta-primary-sub">Mulai transaksi kasir sekarang</div></div>
+      <i className="fas fa-chevron-right dash-cta-primary-arrow"></i>
+    </button>
+  );
+  const QuickActions = (<div>
+    <div className="dash-actions-secondary-title">Akses Cepat</div>
+    <div className="dash-actions">{secondaryActions.map(a => (<button key={a.id} className="dash-action" onClick={() => go(a.id)}><div className="dash-action-ico" style={{background: a.color}}><i className={'fas ' + a.ico}></i></div><div className="dash-action-text"><div className="dash-action-title">{a.title}</div><div className="dash-action-sub">{a.sub}</div></div></button>))}</div>
+  </div>);
   const Alerts = alerts.length > 0 && (<div className="dash-alerts">{alerts.map((a, i) => (<div key={i} className={'dash-alert ' + a.cls} onClick={() => a.nav && go(a.nav)} style={{cursor: a.nav ? 'pointer' : 'default'}}><i className={'fas ' + a.ico + ' dash-alert-ico'}></i><div className="dash-alert-text">{a.text}</div>{a.nav && <i className="fas fa-chevron-right dash-alert-arrow"></i>}</div>))}</div>);
 
   if (role === 'kasir') {
     const ticket = s?.myRecentSales?.length ? Math.round(s.myRecentSales.reduce((sum,r)=>sum+r.total,0) / s.myRecentSales.length) : 0;
     return (
-      <div>{Hero}{QuickActions}
+      <div>{Hero}{PrimaryCTA}{QuickActions}
         <div className="dash-kpis">
           <div className="dash-kpi"><div className="dash-kpi-head"><div className="dash-kpi-ico" style={{background:'#34a853'}}><i className="fas fa-cash-register"></i></div></div><div className="dash-kpi-val">{tk(s?.myTodaySalesAmt)}</div><div className="dash-kpi-lbl">Penjualan Saya Hari Ini</div></div>
           <div className="dash-kpi"><div className="dash-kpi-head"><div className="dash-kpi-ico" style={{background:'var(--navy)'}}><i className="fas fa-coins"></i></div></div><div className="dash-kpi-val">{tk(s?.myTodayCollection)}</div><div className="dash-kpi-lbl">Kas Masuk Saya</div></div>
@@ -754,7 +798,7 @@ function DashboardView({ user, onNavigate }) {
   }
 
   return (
-    <div>{Hero}{Alerts}{QuickActions}
+    <div>{Hero}{PrimaryCTA}{Alerts}{QuickActions}
       <div className="dash-kpis">
         <div className="dash-kpi"><div className="dash-kpi-head"><div className="dash-kpi-ico" style={{background:'#34a853'}}><i className="fas fa-cash-register"></i></div>{ds.length >= 2 && <span className={'dash-kpi-trend ' + trendCls}><i className={'fas ' + trendIco}></i> {Math.abs(pct)}%</span>}</div><div className="dash-kpi-val">{tk(s?.todaySalesAmt)}</div><div className="dash-kpi-lbl">Penjualan Hari Ini</div>{ds.length >= 2 && <div className="dash-kpi-extra">vs kemarin {tk(yest)}</div>}</div>
         <div className="dash-kpi"><div className="dash-kpi-head"><div className="dash-kpi-ico" style={{background:'var(--navy)'}}><i className="fas fa-coins"></i></div></div><div className="dash-kpi-val">{tk(s?.todayCollectionAmt)}</div><div className="dash-kpi-lbl">Kas Masuk Hari Ini</div></div>
@@ -931,15 +975,12 @@ function UsersView({ user }) {
         <button className="btn btn-success" onClick={() => { setEditingUser(null); setShowModal(true); }}><i className="fas fa-plus"></i> Tambah Pengguna</button>
       </div>
       {!loading && (
-        <div className="filters-section">
-          <div className="filters-header"><h3><i className="fas fa-filter"></i> Filter</h3><button className="btn btn-secondary btn-sm" onClick={clearFilters}><i className="fas fa-times-circle"></i> Bersihkan</button></div>
-          <div className="filters-grid">
-            <SearchableDropdown label="Peran" icon="fas fa-user-tag" options={ROLE_OPTIONS} value={filters.role} onChange={(v) => setFilters({...filters, role:v})} placeholder="Semua Peran" />
-            <SearchableDropdown label="Status" icon="fas fa-toggle-on" options={STATUS_OPTIONS} value={filters.status} onChange={(v) => setFilters({...filters, status:v})} placeholder="Semua Status" />
-            <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Dari Tanggal</label><input type="date" className="filter-input" value={filters.dateFrom} onChange={(e) => setFilters({...filters, dateFrom:e.target.value})} /></div>
-            <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Sampai Tanggal</label><input type="date" className="filter-input" value={filters.dateTo} onChange={(e) => setFilters({...filters, dateTo:e.target.value})} /></div>
-          </div>
-        </div>
+        <FilterPanel title="Filter" onClear={clearFilters}>
+          <SearchableDropdown label="Peran" icon="fas fa-user-tag" options={ROLE_OPTIONS} value={filters.role} onChange={(v) => setFilters({...filters, role:v})} placeholder="Semua Peran" />
+          <SearchableDropdown label="Status" icon="fas fa-toggle-on" options={STATUS_OPTIONS} value={filters.status} onChange={(v) => setFilters({...filters, status:v})} placeholder="Semua Status" />
+          <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Dari Tanggal</label><input type="date" className="filter-input" value={filters.dateFrom} onChange={(e) => setFilters({...filters, dateFrom:e.target.value})} /></div>
+          <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Sampai Tanggal</label><input type="date" className="filter-input" value={filters.dateTo} onChange={(e) => setFilters({...filters, dateTo:e.target.value})} /></div>
+        </FilterPanel>
       )}
       {loading && <TableSkeleton rows={6} columns={7} />}
       <div style={{ display: loading ? 'none' : 'block' }}><table id="usersTable" className="display" style={{width:'100%'}}></table></div>
@@ -1174,14 +1215,11 @@ function LogsView({ user }) {
     <div className="data-section">
       <div className="section-header"><h2><i className="fas fa-history"></i> Log Aktivitas</h2><button className="btn btn-primary btn-sm" onClick={loadLogs}><i className="fas fa-sync-alt"></i> Muat Ulang</button></div>
       {!loading && (
-        <div className="filters-section">
-          <div className="filters-header"><h3><i className="fas fa-filter"></i> Filter</h3><button className="btn btn-secondary btn-sm" onClick={clearFilters}><i className="fas fa-times-circle"></i> Bersihkan</button></div>
-          <div className="filters-grid">
-            <SearchableDropdown label="Aksi" icon="fas fa-bolt" options={actionOptions} value={filters.action} onChange={(v) => setFilters({...filters, action:v})} placeholder="Semua Aksi" />
-            <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Dari Tanggal</label><input type="date" className="filter-input" value={filters.dateFrom} onChange={(e) => setFilters({...filters, dateFrom:e.target.value})} /></div>
-            <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Sampai Tanggal</label><input type="date" className="filter-input" value={filters.dateTo} onChange={(e) => setFilters({...filters, dateTo:e.target.value})} /></div>
-          </div>
-        </div>
+        <FilterPanel title="Filter" onClear={clearFilters}>
+          <SearchableDropdown label="Aksi" icon="fas fa-bolt" options={actionOptions} value={filters.action} onChange={(v) => setFilters({...filters, action:v})} placeholder="Semua Aksi" />
+          <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Dari Tanggal</label><input type="date" className="filter-input" value={filters.dateFrom} onChange={(e) => setFilters({...filters, dateFrom:e.target.value})} /></div>
+          <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Sampai Tanggal</label><input type="date" className="filter-input" value={filters.dateTo} onChange={(e) => setFilters({...filters, dateTo:e.target.value})} /></div>
+        </FilterPanel>
       )}
       {loading && <TableSkeleton rows={8} columns={6} />}
       <div style={{ display:loading?'none':'block' }}><table id="logsTable" className="display" style={{width:'100%'}}></table></div>
@@ -1306,7 +1344,7 @@ function CategoriesView({ user }) {
               </div>
             ))}
           </div>
-        ) : (<div className="empty-state"><i className="fas fa-inbox"></i><p>Belum ada kategori</p></div>)
+        ) : (<div className="empty-state"><i className="fas fa-th-large"></i><p>Belum ada kategori</p><div className="empty-state-sub">Kategori membantu mengelompokkan menu supaya kasir lebih cepat mencarinya.</div>{canWrite && <button className="btn btn-success btn-sm" onClick={() => { setEditingCat(null); setShowModal(true); }}><i className="fas fa-plus"></i> Tambah Kategori Pertama</button>}</div>)
       )}
       {showModal && <CategoryModal editCat={editingCat} onClose={() => { setShowModal(false); setEditingCat(null); }} onSave={handleSave} />}
       {load && <div className="loading-ov"><div className="loading-popup"><div className="loading-progress"><div className="loading-progress-bar"></div></div><div className="loading-txt">{load}</div></div></div>}
@@ -1653,15 +1691,12 @@ function PurchasesView({ user, openDetail }) {
       <div className="data-section">
         <div className="section-header"><h2><i className="fas fa-shopping-cart"></i> Pembelian Bahan Baku</h2>{canWrite && <button className="btn btn-success" onClick={() => setShowForm(true)}><i className="fas fa-plus"></i> Tambah Pembelian</button>}</div>
         {!loading && (
-          <div className="filters-section">
-            <div className="filters-header"><h3><i className="fas fa-filter"></i> Filter</h3><button className="btn btn-secondary btn-sm" onClick={clearFilters}><i className="fas fa-times-circle"></i> Bersihkan</button></div>
-            <div className="filters-grid">
-              <SearchableDropdown label="Supplier" icon="fas fa-handshake" options={spOpts} value={filters.supplier} onChange={(v) => setFilters({...filters, supplier:v})} placeholder="Semua Supplier" />
-              <SearchableDropdown label="Status" icon="fas fa-flag" options={statusOpts} value={filters.status} onChange={(v) => setFilters({...filters, status:v})} placeholder="Semua Status" />
-              <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Dari Tanggal</label><input type="date" className="filter-input" value={filters.dateFrom} onChange={(e) => setFilters({...filters, dateFrom:e.target.value})} /></div>
-              <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Sampai Tanggal</label><input type="date" className="filter-input" value={filters.dateTo} onChange={(e) => setFilters({...filters, dateTo:e.target.value})} /></div>
-            </div>
-          </div>
+          <FilterPanel title="Filter" onClear={clearFilters}>
+            <SearchableDropdown label="Supplier" icon="fas fa-handshake" options={spOpts} value={filters.supplier} onChange={(v) => setFilters({...filters, supplier:v})} placeholder="Semua Supplier" />
+            <SearchableDropdown label="Status" icon="fas fa-flag" options={statusOpts} value={filters.status} onChange={(v) => setFilters({...filters, status:v})} placeholder="Semua Status" />
+            <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Dari Tanggal</label><input type="date" className="filter-input" value={filters.dateFrom} onChange={(e) => setFilters({...filters, dateFrom:e.target.value})} /></div>
+            <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Sampai Tanggal</label><input type="date" className="filter-input" value={filters.dateTo} onChange={(e) => setFilters({...filters, dateTo:e.target.value})} /></div>
+          </FilterPanel>
         )}
         {loading && <TableSkeleton rows={6} columns={9} />}
         <div style={{ display: loading ? 'none' : 'block' }}><table id="purTable" className="display" style={{width:'100%'}}></table></div>
@@ -1952,14 +1987,11 @@ function MenuView({ user }) {
       <div className="data-section">
         <div className="section-header"><h2><i className="fas fa-utensils"></i> Menu</h2>{canWrite && <button className="btn btn-success" onClick={() => { setEditingItem(null); setShowDrawer(true); }}><i className="fas fa-plus"></i> Tambah Menu</button>}</div>
         {!loading && (
-          <div className="filters-section">
-            <div className="filters-header"><h3><i className="fas fa-filter"></i> Filter</h3><button className="btn btn-secondary btn-sm" onClick={clearFilters}><i className="fas fa-times-circle"></i> Bersihkan</button></div>
-            <div className="filters-grid">
-              <div className="filter-group"><label><i className="fas fa-search"></i> Cari Nama</label><input type="text" className="filter-input" value={filters.name} onChange={(e) => setFilters({...filters, name:e.target.value})} placeholder="Cari menu..." /></div>
-              <SearchableDropdown label="Kategori" icon="fas fa-th-large" options={catOpts} value={filters.category} onChange={(v) => setFilters({...filters, category:v})} placeholder="Semua Kategori" />
-              <SearchableDropdown label="Status" icon="fas fa-flag" options={statusOpts} value={filters.status} onChange={(v) => setFilters({...filters, status:v})} placeholder="Semua Status" />
-            </div>
-          </div>
+          <FilterPanel title="Filter" onClear={clearFilters}>
+            <div className="filter-group"><label><i className="fas fa-search"></i> Cari Nama</label><input type="text" className="filter-input" value={filters.name} onChange={(e) => setFilters({...filters, name:e.target.value})} placeholder="Cari menu..." /></div>
+            <SearchableDropdown label="Kategori" icon="fas fa-th-large" options={catOpts} value={filters.category} onChange={(v) => setFilters({...filters, category:v})} placeholder="Semua Kategori" />
+            <SearchableDropdown label="Status" icon="fas fa-flag" options={statusOpts} value={filters.status} onChange={(v) => setFilters({...filters, status:v})} placeholder="Semua Status" />
+          </FilterPanel>
         )}
         {loading && <TableSkeleton rows={8} columns={6} />}
         <div style={{ display: loading ? 'none' : 'block' }}><table id="menuTable" className="display" style={{width:'100%'}}></table></div>
@@ -2328,10 +2360,9 @@ function CustomersView({ user, openLedger }) {
     <div className="data-section">
       <div className="section-header"><h2><i className="fas fa-user-friends"></i> Pelanggan</h2><button className="btn btn-success" onClick={() => { setEditingCU(null); setShowModal(true); }}><i className="fas fa-plus"></i> Tambah Pelanggan</button></div>
       {!loading && (
-        <div className="filters-section">
-          <div className="filters-header"><h3><i className="fas fa-filter"></i> Filter</h3><button className="btn btn-secondary btn-sm" onClick={() => { setFilterDue(''); if (tableRef.current) { while ($.fn.dataTable.ext.search.length>0) $.fn.dataTable.ext.search.pop(); tableRef.current.draw(); } }}><i className="fas fa-times-circle"></i> Bersihkan</button></div>
-          <div className="filters-grid"><SearchableDropdown label="Status Piutang" icon="fas fa-money-bill-wave" options={dueOpts} value={filterDue} onChange={setFilterDue} placeholder="Semua Pelanggan" /></div>
-        </div>
+        <FilterPanel title="Filter" onClear={() => { setFilterDue(''); if (tableRef.current) { while ($.fn.dataTable.ext.search.length>0) $.fn.dataTable.ext.search.pop(); tableRef.current.draw(); } }}>
+          <SearchableDropdown label="Status Piutang" icon="fas fa-money-bill-wave" options={dueOpts} value={filterDue} onChange={setFilterDue} placeholder="Semua Pelanggan" />
+        </FilterPanel>
       )}
       {loading && <TableSkeleton rows={5} columns={6} />}
       <div style={{ display: loading ? 'none' : 'block' }}><table id="custTable" className="display" style={{width:'100%'}}></table></div>
@@ -2549,6 +2580,7 @@ function POSView({ user }) {
   const [showAddCust, setShowAddCust] = useState(false);
   const [menuLoading, setMenuLoading] = useState(!_miC);
   const [slipOpen, setSlipOpen] = useState(true);
+  const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const searchRef = useRef(null);
   const debounceRef = useRef(null);
   const slipRef = useRef(null);
@@ -2617,7 +2649,7 @@ function POSView({ user }) {
       if (r.success) {
         if (status !== 'pending') setShowInvoice({ invoice_no: r.data.invoice_no, customer: customers.find(c => c.id == customerId)?.name || 'Pelanggan Umum', orderType, tableNo, items: cart, subtotal, discount: disc, grandTotal, paid: status === 'pending' ? 0 : paid, kembalian, due: status === 'pending' ? grandTotal : due, payMethod, payRef, notes, date: new Date().toISOString() });
         else Swal.fire({ icon:'success', text:'Pesanan ditahan — ' + r.data.invoice_no, timer:2000, showConfirmButton:false });
-        setCart([]); setDiscount('0'); setPaidAmt(''); setPayRef(''); setNotes(''); setCustomerId(''); setTableNo('');
+        setCart([]); setDiscount('0'); setPaidAmt(''); setPayRef(''); setNotes(''); setCustomerId(''); setTableNo(''); setMobileCartOpen(false);
         const k = 'pos_menu_' + (filterCat || 0);
         API.getAvailableMenu(filterCat ? parseInt(filterCat) : 0).then(am => { if (am.success) { setAllMenu(am.data); swrSet(k, am.data); } });
       } else Swal.fire({ icon:'error', text:r.message });
@@ -2639,20 +2671,22 @@ function POSView({ user }) {
     <div>
       <div className="pos-layout">
         <div className="pos-left">
-          <div className="filters-section" style={{marginBottom:'12px', padding:'14px 16px'}}>
-            <div className="filters-header" style={{marginBottom:'12px', paddingBottom:'10px'}}><h3 style={{fontSize:'15px'}}><i className="fas fa-filter"></i> Filter Cepat</h3><button className="btn btn-secondary btn-sm" onClick={() => { setFilterCat(''); setSearchQ(''); }}><i className="fas fa-times-circle"></i> Bersihkan</button></div>
-            <div className="filters-grid" style={{gap:'12px'}}><SearchableDropdown options={catOpts} value={filterCat} onChange={setFilterCat} placeholder="Semua Kategori" label="Kategori" icon="fas fa-th-large" /></div>
-          </div>
-          <div className="pos-search">
-            <i className="fas fa-search search-icon"></i>
-            <input ref={searchRef} type="text" value={searchQ} onChange={(e) => doSearch(e.target.value)} placeholder="Cari nama menu..." autoComplete="off" />
-            {(results.length > 0 || searching) && (
-              <div className="pos-results">
-                {searching && <div style={{padding:'12px', textAlign:'center', color:'#888'}}><i className="fas fa-spinner fa-spin"></i> Mencari...</div>}
-                {results.map((m, i) => (<div key={i} className="pos-result-item" onClick={() => addToCart(m)}><div><span className="pos-result-serial">{m.name}</span><div className="pos-result-info">{m.category_name}</div></div><span className="pos-result-price">{fmtRp(m.price)}</span></div>))}
-                {!searching && results.length === 0 && searchQ.length > 1 && <div style={{padding:'12px', textAlign:'center', color:'#aaa'}}>Tidak ada hasil</div>}
-              </div>
-            )}
+          <div className="pos-topbar">
+            <div className="pos-cat-chips">
+              <button className={'pos-chip' + (!filterCat ? ' active' : '')} onClick={() => setFilterCat('')}>Semua</button>
+              {catOpts.map(c => (<button key={c.value} className={'pos-chip' + (filterCat === c.value ? ' active' : '')} onClick={() => setFilterCat(c.value)}>{c.label}</button>))}
+            </div>
+            <div className="pos-search-compact">
+              <i className="fas fa-search search-icon"></i>
+              <input ref={searchRef} type="text" value={searchQ} onChange={(e) => doSearch(e.target.value)} placeholder="Cari menu..." autoComplete="off" />
+              {(results.length > 0 || searching) && (
+                <div className="pos-results">
+                  {searching && <div style={{padding:'12px', textAlign:'center', color:'#888'}}><i className="fas fa-spinner fa-spin"></i> Mencari...</div>}
+                  {results.map((m, i) => (<div key={i} className="pos-result-item" onClick={() => addToCart(m)}><div><span className="pos-result-serial">{m.name}</span><div className="pos-result-info">{m.category_name}</div></div><span className="pos-result-price">{fmtRp(m.price)}</span></div>))}
+                  {!searching && results.length === 0 && searchQ.length > 1 && <div style={{padding:'12px', textAlign:'center', color:'#aaa'}}>Tidak ada hasil</div>}
+                </div>
+              )}
+            </div>
           </div>
           {cart.length > 0 && (
             <div style={{marginBottom:'16px'}}>
@@ -2681,19 +2715,20 @@ function POSView({ user }) {
               <div className="pos-product-grid">
                 {displayMenu.map(m => (
                   <div key={m.id} className="pos-product-card" onClick={() => addToCart(m)}>
-                    {m.track_stock && <span className="ppc-qty-badge"><i className="fas fa-cubes"></i> {m.stock_qty}</span>}
+                    {m.track_stock && <span className={'ppc-qty-badge' + (m.stock_qty <= 5 ? ' low' : '')}><i className="fas fa-cubes"></i> Sisa {m.stock_qty}</span>}
                     {m.image ? <img src={'https://lh3.google.com/u/0/d/' + m.image} className="ppc-img" alt={m.name} /> : <div className="ppc-img-ph"><i className="fas fa-utensils"></i></div>}
-                    <div className="ppc-serial"><i className="fas fa-utensils"></i> {m.name}</div>
-                    <div className="ppc-meta"><i className="fas fa-th-large"></i> {m.category_name}</div>
-                    <div className="ppc-price">{fmtRp(m.price)}</div>
+                    <div className="ppc-serial">{m.name}</div>
+                    <div className="ppc-meta">{m.category_name}</div>
+                    <div className="ppc-price"><span>{fmtRp(m.price)}</span><span className="ppc-add-btn"><i className="fas fa-plus"></i></span></div>
                   </div>
                 ))}
               </div>
-            ) : <div className="pos-products-empty">Tidak ada menu tersedia {searchQ ? 'yang cocok dengan "' + searchQ + '"' : ''}</div>}
+            ) : (<div className="empty-state" style={{padding:'32px 20px'}}><i className="fas fa-utensils"></i><p>{searchQ ? 'Tidak ditemukan' : 'Belum ada menu di kategori ini'}</p><div className="empty-state-sub">{searchQ ? <>Tidak ada menu yang cocok dengan "{searchQ}"</> : 'Coba pilih kategori lain, atau tambahkan menu baru dari halaman Menu.'}</div></div>)}
           </div>
         </div>
 
-        <div className="pos-right">
+        <div className={'pos-right' + (mobileCartOpen ? ' mobile-open' : '')}>
+          <button className="pos-mobile-checkout-close" onClick={() => setMobileCartOpen(false)}><i className="fas fa-arrow-left"></i> Kembali ke Menu</button>
           <div className="pos-pane">
             <div className="pos-pane-title"><i className="fas fa-receipt"></i> Tipe Pesanan</div>
             <div className="pos-order-type-grid">
@@ -2751,6 +2786,14 @@ function POSView({ user }) {
           )}
         </div>
       </div>
+      {cart.length > 0 && (
+        <button className="pos-floating-cart" onClick={() => setMobileCartOpen(true)}>
+          <span className="pos-floating-cart-badge">{totalItems}</span>
+          <span className="pos-floating-cart-text">Lihat Keranjang</span>
+          <span className="pos-floating-cart-total">{fmtRp(grandTotal)}</span>
+          <i className="fas fa-chevron-right"></i>
+        </button>
+      )}
       {showAddCust && <QuickAddCustomerModal onClose={() => setShowAddCust(false)} onSave={handleQuickAddCust} />}
       {showInvoice && <InvoicePrintModal data={showInvoice} onClose={() => setShowInvoice(null)} />}
       {load && <div className="loading-ov"><div className="loading-popup"><div className="loading-progress"><div className="loading-progress-bar"></div></div><div className="loading-txt">{load}</div></div></div>}
@@ -2891,16 +2934,13 @@ function SalesListView({ user, onNavigate }) {
     <div className="data-section">
       <div className="section-header"><h2><i className="fas fa-receipt"></i> Transaksi</h2></div>
       {!loading && (
-        <div className="filters-section">
-          <div className="filters-header"><h3><i className="fas fa-filter"></i> Filter</h3><button className="btn btn-secondary btn-sm" onClick={clearFilters}><i className="fas fa-times-circle"></i> Bersihkan</button></div>
-          <div className="filters-grid">
-            <SearchableDropdown label="Status" icon="fas fa-flag" options={statusOpts} value={filters.status} onChange={(v) => setFilters({...filters, status:v})} placeholder="Semua Status" />
-            <SearchableDropdown label="Pembayaran" icon="fas fa-credit-card" options={methodOpts} value={filters.method} onChange={(v) => setFilters({...filters, method:v})} placeholder="Semua Metode" />
-            <SearchableDropdown label="Tipe Pesanan" icon="fas fa-receipt" options={orderTypeOpts} value={filters.orderType} onChange={(v) => setFilters({...filters, orderType:v})} placeholder="Semua Tipe" />
-            <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Dari Tanggal</label><input type="date" className="filter-input" value={filters.dateFrom} onChange={(e) => setFilters({...filters, dateFrom:e.target.value})} /></div>
-            <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Sampai Tanggal</label><input type="date" className="filter-input" value={filters.dateTo} onChange={(e) => setFilters({...filters, dateTo:e.target.value})} /></div>
-          </div>
-        </div>
+        <FilterPanel title="Filter" onClear={clearFilters}>
+          <SearchableDropdown label="Status" icon="fas fa-flag" options={statusOpts} value={filters.status} onChange={(v) => setFilters({...filters, status:v})} placeholder="Semua Status" />
+          <SearchableDropdown label="Pembayaran" icon="fas fa-credit-card" options={methodOpts} value={filters.method} onChange={(v) => setFilters({...filters, method:v})} placeholder="Semua Metode" />
+          <SearchableDropdown label="Tipe Pesanan" icon="fas fa-receipt" options={orderTypeOpts} value={filters.orderType} onChange={(v) => setFilters({...filters, orderType:v})} placeholder="Semua Tipe" />
+          <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Dari Tanggal</label><input type="date" className="filter-input" value={filters.dateFrom} onChange={(e) => setFilters({...filters, dateFrom:e.target.value})} /></div>
+          <div className="filter-group"><label><i className="fas fa-calendar-alt"></i> Sampai Tanggal</label><input type="date" className="filter-input" value={filters.dateTo} onChange={(e) => setFilters({...filters, dateTo:e.target.value})} /></div>
+        </FilterPanel>
       )}
       {loading && <TableSkeleton rows={6} columns={10} />}
       <div style={{ display: loading ? 'none' : 'block' }}><table id="salesTable" className="display" style={{width:'100%'}}></table></div>

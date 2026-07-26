@@ -36,6 +36,22 @@
   --warning: var(--accent-warning);
   --danger: var(--accent-danger);
   --info: var(--navy-accent);
+
+  /* ── Spacing scale (basis 4px, dipakai konsisten di seluruh komponen baru) ── */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
+
+  /* ── Typography scale ── */
+  --text-display: 26px; --text-h1: 20px; --text-h2: 17px; --text-h3: 14.5px;
+  --text-body: 14px; --text-caption: 12px; --text-label: 11px;
+
+  /* ── Neutral scale (dipakai buat border/bg sekunder, konsisten ganti abu-abu acak) ── */
+  --neutral-50: #fafafa; --neutral-100: #f0f0f0; --neutral-200: #e5e5e5;
+  --neutral-300: #d0d0d0; --neutral-500: #6b6b6b; --neutral-700: #4a4a4a;
+}
+/* Aksesibilitas: outline fokus jelas buat navigasi keyboard (WCAG 2.4.7) */
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2.5px solid var(--navy-accent); outline-offset: 2px;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; height: 100%; }
@@ -103,7 +119,9 @@ input, select, textarea { font-size: 16px !important; touch-action: manipulation
 .sidebar-avatar-initials { width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; margin: 0 auto 12px; border: 3px solid rgba(255,255,255,0.3); }
 .sidebar-user-name { font-weight: 600; font-size: 18px; margin-bottom: 8px; }
 .sidebar-user-role { font-size: 13px; color: rgba(255,255,255,0.8); padding: 5px 12px; background: rgba(255,255,255,0.15); border-radius: 999px; display: inline-block; text-transform: capitalize; }
-.sidebar-menu-section { flex: 1; padding: 20px 14px; }
+.sidebar-menu-groups { flex: 1; overflow-y: auto; }
+.sidebar-menu-section { padding: 14px 14px 6px; }
+.sidebar-menu-section + .sidebar-menu-section { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; }
 .sidebar-menu-title { margin-bottom: 12px; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.5); padding: 0 10px; }
 .sidebar-menu { list-style: none; }
 .sidebar-menu li { margin-bottom: 6px; }
@@ -168,23 +186,36 @@ input, select, textarea { font-size: 16px !important; touch-action: manipulation
 .dashboard-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
 .dashboard-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px; }
 
-.dash-hero { background: var(--navy); border-radius: 10px; padding: 24px 28px; color: white; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.18); position: relative; overflow: hidden; }
+.dash-hero { background: var(--navy); border-radius: 10px; padding: 16px 20px; color: white; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.18); position: relative; overflow: hidden; }
 .dash-hero::before { content: ''; position: absolute; top: -80px; right: -60px; width: 240px; height: 240px; border-radius: 50%; background: rgba(255,255,255,0.05); }
-.dash-hero-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; position: relative; z-index: 1; }
-.dash-hero-greet { font-size: 24px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
-.dash-hero-sub { font-size: 13px; opacity: 0.85; }
-.dash-hero-date { font-size: 12px; background: rgba(255,255,255,0.15); padding: 8px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; }
-.dash-hero-stats { display: flex; gap: 32px; padding-top: 16px; margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.18); position: relative; z-index: 1; flex-wrap: wrap; }
-.dash-hero-stat-val { font-size: 22px; font-weight: 700; line-height: 1.1; }
-.dash-hero-stat-lbl { font-size: 11px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
+.dash-hero-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; position: relative; z-index: 1; }
+.dash-hero-greet { font-size: var(--text-h1); font-weight: 700; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+.dash-hero-sub { font-size: var(--text-caption); opacity: 0.85; }
+.dash-hero-date { font-size: var(--text-label); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; }
+.dash-hero-stats { display: flex; gap: 28px; padding-top: 12px; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.18); position: relative; z-index: 1; flex-wrap: wrap; }
+.dash-hero-stat-val { font-size: 20px; font-weight: 700; line-height: 1.1; }
+.dash-hero-stat-lbl { font-size: 10.5px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 3px; }
 
-.dash-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 20px; }
-.dash-action { background: white; border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px 16px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px; text-align: left; font-family: inherit; }
-.dash-action:hover { border-color: var(--navy-accent); transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
-.dash-action-ico { width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; flex-shrink: 0; }
+/* ── CTA Utama: "Pesanan Baru" — satu-satunya elemen paling dominan di layar (Fitts's Law: target besar, gampang dijangkau) ── */
+.dash-cta-primary { display: flex; align-items: center; gap: 16px; width: 100%; background: linear-gradient(135deg, #34a853, #2a8a43); border: none; border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; cursor: pointer; box-shadow: 0 8px 22px rgba(52,168,83,0.32); transition: transform 0.15s ease, box-shadow 0.15s ease; text-align: left; font-family: inherit; }
+.dash-cta-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(52,168,83,0.4); }
+.dash-cta-primary:active { transform: scale(0.98); }
+.dash-cta-primary-ico { width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; flex-shrink: 0; }
+.dash-cta-primary-text { flex: 1; min-width: 0; }
+.dash-cta-primary-title { font-size: var(--text-h1); font-weight: 700; color: white; }
+.dash-cta-primary-sub { font-size: var(--text-caption); color: rgba(255,255,255,0.85); margin-top: 2px; }
+.dash-cta-primary-arrow { color: rgba(255,255,255,0.9); font-size: 18px; flex-shrink: 0; }
+
+/* Shortcut sekunder — lebih kecil dari CTA utama, mendukung tapi tidak bersaing perhatian */
+.dash-actions-secondary-title { font-size: var(--text-label); font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--neutral-500); margin: 4px 0 8px 2px; }
+
+.dash-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 18px; }
+.dash-action { background: white; border: 1px solid var(--neutral-200); border-radius: 8px; padding: 11px 13px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; text-align: left; font-family: inherit; }
+.dash-action:hover { border-color: var(--navy-accent); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.dash-action-ico { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; flex-shrink: 0; }
 .dash-action-text { flex: 1; min-width: 0; }
-.dash-action-title { font-size: 13.5px; font-weight: 600; color: #222; }
-.dash-action-sub { font-size: 11px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-action-title { font-size: var(--text-caption); font-weight: 600; color: #222; }
+.dash-action-sub { font-size: 10.5px; color: var(--neutral-500); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .dash-alerts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
 .dash-alert { background: white; border-left: 4px solid var(--navy-accent); padding: 12px 16px; border-radius: 4px; display: flex; align-items: center; gap: 12px; font-size: 13px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s; }
@@ -245,10 +276,13 @@ input, select, textarea { font-size: 16px !important; touch-action: manipulation
 .dash-top-item:nth-child(3) .dash-top-rank { background: #CD7F32; color: white; }
 .dash-top-name { flex: 1; font-size: 13px; font-weight: 500; color: #333; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dash-top-val { font-size: 13px; font-weight: 700; color: #2e7d32; flex-shrink: 0; }
-.dash-empty { text-align: center; padding: 24px 12px; color: #aaa; font-size: 13px; }
-.dash-empty i { font-size: 32px; margin-bottom: 8px; display: block; color: #ddd; }
+.dash-empty { text-align: center; padding: 28px 16px; color: var(--neutral-500); font-size: 13px; }
+.dash-empty i { width: 44px; height: 44px; border-radius: 50%; background: var(--neutral-100); color: var(--neutral-500); font-size: 18px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; }
+.dash-empty p { font-weight: 500; color: var(--neutral-700); }
 
 table.dataTable { width: 100% !important; border-collapse: collapse; background: white; }
+.dataTables_wrapper { border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--neutral-200); }
+.dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate, .dataTables_wrapper .dt-buttons { padding: 10px 16px; }
 table.dataTable thead th { background: var(--navy-primary) !important; color: white !important; padding: 14px !important; text-align: left; font-weight: 600; font-size: 14px; }
 table.dataTable tbody td { padding: 12px 14px !important; font-size: 14px; color: #555; vertical-align: middle; }
 table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
@@ -259,7 +293,7 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .dt-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid #e0e0e0; }
 .dt-avatar-ph { width: 36px; height: 36px; border-radius: 50%; background: var(--navy-primary); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
 
-.action-icon { background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 6px 10px; margin: 0 4px; border-radius: 2px; transition: all 0.3s; }
+.action-icon { background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 6px 10px; margin: 0 4px; border-radius: 8px; transition: all 0.3s; min-width: 40px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; }
 .action-icon.edit-icon { color: #fbbc04; }
 .action-icon.edit-icon:hover { background: rgba(251,188,4,0.1); transform: scale(1.15); }
 .action-icon.delete-icon { color: #ea4335; }
@@ -276,7 +310,7 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .status-dot.active { background: #34a853; box-shadow: 0 0 0 3px rgba(52,168,83,0.2); }
 .status-dot.inactive { background: #ea4335; box-shadow: 0 0 0 3px rgba(234,67,53,0.2); }
 
-.role-badge { display: inline-block; padding: 4px 10px; border-radius: 3px; font-size: 12px; font-weight: 600; }
+.role-badge { display: inline-block; padding: 4px 10px; border-radius: var(--radius-lg); font-size: 12px; font-weight: 600; }
 .role-admin { background: #fce4ec; color: #c62828; }
 .role-manager { background: #e3f2fd; color: #1565c0; }
 .role-kasir { background: #e8f5e9; color: #2e7d32; }
@@ -308,7 +342,7 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 
 .pwd-wrapper { position: relative; }
 .pwd-wrapper input { padding-right: 44px; }
-.pwd-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #888; cursor: pointer; font-size: 16px; padding: 4px; }
+.pwd-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #888; cursor: pointer; font-size: 16px; padding: 4px; min-width: 40px; min-height: 40px; display: flex; align-items: center; justify-content: center; }
 .pwd-toggle:hover { color: var(--navy-primary); }
 .change-pwd-link { color: var(--navy-accent); cursor: pointer; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; padding: 10px 0; border: none; background: none; }
 .change-pwd-link:hover { color: var(--navy-primary); text-decoration: underline; }
@@ -324,15 +358,15 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .upload-zone:hover, .upload-zone.dragover { border-color: var(--navy-accent); background: rgba(224,122,31,0.03); }
 .upload-preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--navy-primary); margin-bottom: 10px; }
 .img-preview-rect { width: 160px; height: 110px; border-radius: 6px; object-fit: cover; border: 2px solid var(--navy-primary); margin-bottom: 10px; }
-.dt-thumb { width: 44px; height: 44px; border-radius: 4px; object-fit: cover; border: 1px solid #e0e0e0; }
-.dt-thumb-ph { width: 44px; height: 44px; border-radius: 4px; background: #f5f5f5; display: inline-flex; align-items: center; justify-content: center; color: #ccc; border: 1px solid #e8e8e8; }
+.dt-thumb { width: 44px; height: 44px; border-radius: var(--radius-lg); object-fit: cover; border: 1px solid #e0e0e0; }
+.dt-thumb-ph { width: 44px; height: 44px; border-radius: var(--radius-lg); background: #f5f5f5; display: inline-flex; align-items: center; justify-content: center; color: #ccc; border: 1px solid #e8e8e8; }
 .upload-hint { color: #888; font-size: 13px; }
 
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
 .modal { background: white; border-radius: 20px; width: 80%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,0.2); }
 .modal-header { padding: 24px 30px; background: var(--navy-primary); color: white; display: flex; justify-content: space-between; align-items: center; border-radius: 20px 20px 0 0; }
 .modal-header h3 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; margin: 0; }
-.close-btn { background: transparent; border: none; color: white; font-size: 28px; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+.close-btn { background: transparent; border: none; color: white; font-size: 26px; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
 .close-btn:hover { background: rgba(255,255,255,0.2); transform: rotate(90deg); }
 .modal-body { padding: 30px; }
 
@@ -485,7 +519,7 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .due-amount { color: #c62828; font-weight: 700; }
 .paid-amount { color: #2e7d32; font-weight: 600; }
 
-.pur-status { padding: 4px 12px; border-radius: 3px; font-size: 12px; font-weight: 600; display: inline-block; text-transform: capitalize; }
+.pur-status { padding: 4px 12px; border-radius: var(--radius-lg); font-size: 12px; font-weight: 600; display: inline-block; text-transform: capitalize; }
 .pur-pending { background: #fff8e1; color: #f57f17; }
 .pur-completed { background: #e8f5e9; color: #2e7d32; }
 .pur-cancelled { background: #fce4ec; color: #c62828; }
@@ -531,6 +565,17 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .pos-layout { display: grid; grid-template-columns: 1fr 340px; gap: 0; height: calc(100vh - 140px); background: white; border-radius: 22px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.10); }
 .pos-left { padding: 22px; overflow-y: auto; border-right: 1px solid #e0e0e0; }
 .pos-right { padding: 22px; overflow-y: auto; background: #f8f9fa; display: flex; flex-direction: column; }
+/* ── Bar Kategori + Search: ringkas, sticky, search bukan lagi elemen dominan (sesuai brief poin 6 & 7) ── */
+.pos-topbar { position: sticky; top: 0; z-index: 20; background: white; padding-bottom: 10px; margin-bottom: 12px; }
+.pos-cat-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: none; }
+.pos-cat-chips::-webkit-scrollbar { display: none; }
+.pos-chip { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--neutral-200); background: white; color: var(--neutral-700); font-size: var(--text-caption); font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; font-family: inherit; }
+.pos-chip.active { background: var(--navy); border-color: var(--navy); color: white; }
+.pos-search-compact { position: relative; }
+.pos-search-compact input { width: 100%; padding: 9px 14px 9px 36px; border: 1px solid var(--neutral-200); border-radius: 10px; font-size: 14px; background: var(--neutral-50); }
+.pos-search-compact input:focus { outline: none; border-color: var(--navy-accent); background: white; }
+.pos-search-compact .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--neutral-500); font-size: 14px; }
+
 .pos-search { position: relative; margin-bottom: 16px; }
 .pos-search input { width: 100%; padding: 14px 16px 14px 46px; border: 2px solid var(--navy-accent); border-radius: 16px; font-size: 16px; }
 .pos-search input:focus { outline: none; box-shadow: 0 0 0 3px rgba(224,122,31,0.2); }
@@ -547,10 +592,16 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .pos-product-card:hover { border-color: var(--navy-accent); box-shadow: 0 4px 14px rgba(0,0,0,0.15); transform: translateY(-2px); }
 .ppc-img { width: 100%; height: 110px; border-radius: 12px; object-fit: cover; background: #f5f5f5; display: block; margin-bottom: 4px; }
 .ppc-img-ph { width: 100%; height: 110px; border-radius: 12px; background: #F1F5F9; display: flex; align-items: center; justify-content: center; color: #94A3B8; font-size: 38px; margin-bottom: 4px; }
-.ppc-serial { font-weight: 700; font-size: 14px; color: var(--navy-primary); display: flex; align-items: center; gap: 6px; }
-.ppc-meta { font-size: 12px; color: #666; display: flex; align-items: center; gap: 5px; }
-.ppc-price { font-size: 16px; font-weight: 700; color: #2e7d32; margin-top: 4px; padding-top: 8px; border-top: 1px dashed #f0f0f0; }
-.ppc-qty-badge { position: absolute; top: 8px; right: 8px; background: var(--navy-accent); color: white; font-size: 11px; padding: 3px 9px; border-radius: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+/* Nama menu = elemen paling menonjol di card (hierarchy #1) */
+.ppc-serial { font-weight: 700; font-size: 15px; color: #1a1a1a; line-height: 1.25; }
+/* Kategori dikecilkan & dilemahkan — cuma info pendukung, bukan fokus (hierarchy #3) */
+.ppc-meta { font-size: 10.5px; color: var(--neutral-500); text-transform: uppercase; letter-spacing: 0.3px; }
+/* Harga = info kedua paling jelas (hierarchy #2), CTA tambah di sisinya (target sentuh eksplisit, Fitts's Law) */
+.ppc-price { font-size: 17px; font-weight: 700; color: #2e7d32; margin-top: 2px; padding-top: 8px; border-top: 1px dashed #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+.ppc-qty-badge { position: absolute; top: 8px; right: 8px; background: var(--navy-accent); color: white; font-size: 10.5px; padding: 3px 9px; border-radius: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+.ppc-qty-badge.low { background: #c62828; }
+.ppc-add-btn { width: 30px; height: 30px; border-radius: 50%; background: var(--navy); color: white; border: none; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+.pos-product-card:active .ppc-add-btn { transform: scale(0.9); }
 .pos-products-empty { padding: 30px 20px; text-align: center; color: #aaa; }
 
 .cart-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -560,13 +611,17 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .cart-qty-btn { width: 26px; height: 26px; border-radius: 4px; border: 1px solid #ddd; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #555; }
 .cart-qty-btn:hover { background: #f5f5f5; border-color: var(--navy-accent); color: var(--navy-accent); }
 .cart-qty-val { min-width: 22px; text-align: center; font-weight: 700; }
-.cart-remove { background: none; border: none; color: #ea4335; cursor: pointer; font-size: 16px; padding: 4px; }
+.cart-remove { background: none; border: none; color: #ea4335; cursor: pointer; font-size: 16px; padding: 4px; min-width: 36px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
 .cart-remove:hover { transform: scale(1.2); }
 .cart-empty { text-align: center; padding: 40px; color: #ccc; }
 .cart-empty i { font-size: 40px; display: block; margin-bottom: 10px; }
 
 .pos-pane { background: white; border: 1px solid #e8e8e8; border-radius: 18px; padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 .pos-pane-title { font-size: 12px; font-weight: 700; color: var(--navy-primary); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+
+/* ── Floating cart bar (mobile) — keranjang & checkout selalu 1 tap, tidak perlu scroll lewati semua menu ── */
+.pos-floating-cart { display: none; }
+.pos-mobile-checkout-close { display: none; }
 
 .pos-cust-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--navy); color: white; border-radius: 16px; }
 .pos-cust-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
@@ -673,9 +728,11 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .stock-detail-item .val { font-size: 20px; font-weight: 700; color: var(--navy-primary); }
 .stock-detail-item .lbl { font-size: 11px; color: #888; text-transform: uppercase; margin-top: 4px; }
 
-.empty-state { text-align: center; padding: 40px 20px; color: #aaa; }
-.empty-state i { font-size: 48px; margin-bottom: 12px; display: block; color: #ddd; }
-.empty-state p { font-size: 15px; }
+.empty-state { text-align: center; padding: 48px 24px; color: var(--neutral-500); }
+.empty-state i { width: 64px; height: 64px; border-radius: 50%; background: var(--neutral-100); color: var(--neutral-500); font-size: 26px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; }
+.empty-state p { font-size: 15px; font-weight: 600; color: var(--neutral-700); margin-bottom: 4px; }
+.empty-state .empty-state-sub { font-size: 13px; color: var(--neutral-500); font-weight: 400; margin-bottom: 16px; }
+.empty-state .btn { margin-top: 4px; }
 
 .quick-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
 .quick-stat { background: white; padding: 18px; border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-left: 4px solid var(--navy-primary); display: flex; align-items: center; gap: 14px; }
@@ -742,6 +799,14 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
   .pos-layout { grid-template-columns: 1fr; height: auto; }
   .pos-right { border-top: 1px solid #e0e0e0; }
   .pos-product-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 10px; }
+  /* Kasir mobile: keranjang & checkout disembunyikan dari alur normal, dipanggil lewat floating bar supaya tidak perlu scroll lewat semua menu dulu */
+  .pos-right { display: none; }
+  .pos-right.mobile-open { display: flex; position: fixed; inset: 0; z-index: 1300; background: white; padding: 16px 16px 100px; overflow-y: auto; border-top: none; }
+  .pos-mobile-checkout-close { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--navy-primary); font-size: 15px; margin-bottom: 14px; background: none; border: none; padding: 4px 0; cursor: pointer; }
+  .pos-floating-cart { display: flex; align-items: center; gap: 12px; position: fixed; left: 12px; right: 12px; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); background: var(--navy); color: white; padding: 12px 16px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); z-index: 900; border: none; cursor: pointer; font-family: inherit; }
+  .pos-floating-cart-badge { background: rgba(255,255,255,0.25); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .pos-floating-cart-text { flex: 1; text-align: left; font-size: 13px; font-weight: 600; }
+  .pos-floating-cart-total { font-size: 15px; font-weight: 700; }
   .cust-stats { grid-template-columns: 1fr; }
   .stock-detail-grid { grid-template-columns: 1fr; }
   input, select, textarea { font-size: 16px !important; }
@@ -797,5 +862,7 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
   .bnav-item.active i { transform: translateY(-2px); font-size: 21px; }
   .bnav-item.active::before { content: ''; position: absolute; top: 0; left: 25%; right: 25%; height: 3px; background: var(--navy-primary); border-radius: 0 0 3px 3px; }
   .bnav-item:active { transform: scale(0.9); }
+  .bnav-fab { width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #34a853, #2a8a43); border: 4px solid #fff; color: white; font-size: 20px; display: flex; align-items: center; justify-content: center; margin-top: -26px; box-shadow: 0 6px 16px rgba(52,168,83,0.45); cursor: pointer; flex-shrink: 0; transition: transform 0.15s ease; }
+  .bnav-fab:active { transform: scale(0.92); }
   .main-content { padding-bottom: 70px !important; }
 }
