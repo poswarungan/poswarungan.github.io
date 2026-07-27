@@ -1,6 +1,6 @@
 /**
  * config.js
- * Konfigurasi global aplikasi POS Warungan (Multi-Tenant Frontend)
+ * Konfigurasi global aplikasi POS Warung (Multi-Tenant Frontend)
  * Tidak boleh berisi logic bisnis. Hanya konstanta & helper baca/tulis konfigurasi.
  */
 
@@ -11,7 +11,7 @@ const CONFIG = {
   // URL Apps Script Registry PUSAT (satu-satunya backend yang alamatnya tetap/hardcode).
   // Registry ini menyimpan daftar semua warung: kode -> URL Apps Script masing-masing warung.
   // GANTI dengan URL deploy Apps Script Registry milikmu.
-  REGISTRY_URL: 'https://script.google.com/macros/s/AKfycbwt8_hXCg5fT8zuoLJeAAKMHjS9t-3JwZvpY5j8QUW1K2ww0yPy9eZT9JEGjo4C3n0VrA/exec',
+  REGISTRY_URL: 'https://script.google.com/macros/s/REGISTRY_SCRIPT_ID/exec',
 
   // Diisi otomatis saat runtime dari Local Storage (hasil onboarding). Jangan diisi manual di sini.
   API_URL: null,
@@ -19,9 +19,9 @@ const CONFIG = {
   WARUNG_NAME: null,
 
   // Tema default (akan ditimpa oleh Settings warung masing-masing setelah login)
-  THEME_COLOR: '#b3261e',
-  THEME_COLOR_HOVER: '#8f1e18',
-  THEME_ACCENT: '#e07a1f',
+  THEME_COLOR: '#1463f6',
+  THEME_COLOR_HOVER: '#0f4dbf',
+  THEME_ACCENT: '#3b82f6',
 
   LOCAL_STORAGE_KEY: 'pos_warung_session'
 };

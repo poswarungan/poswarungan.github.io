@@ -40,9 +40,9 @@ function fmtRp(n) { return CS() + ' ' + Math.round(n||0).toLocaleString('id-ID')
 function applyThemeFromSettings(s) {
   s = s || {};
   var root = document.documentElement;
-  var primary = s.theme_primary || '#b3261e';
-  var hover = s.theme_primary_hover || '#8f1e18';
-  var accent = s.theme_accent || '#e07a1f';
+  var primary = s.theme_primary || '#1463f6';
+  var hover = s.theme_primary_hover || '#0f4dbf';
+  var accent = s.theme_accent || '#3b82f6';
   
   root.style.setProperty('--brand', primary);
   root.style.setProperty('--brand-hover', hover);
@@ -144,6 +144,7 @@ var ROLE_LABELS = { admin:'Admin', manager:'Manajer', kasir:'Kasir' };
 var ROLE_OPTIONS = [ { value:'admin', label:'Admin' }, { value:'manager', label:'Manajer' }, { value:'kasir', label:'Kasir' } ];
 var ORDER_TYPE_LABELS = { dine_in:'Makan di Tempat', takeaway:'Bawa Pulang', delivery:'Antar' };
 var PRESET_THEMES = [
+  { name:'Biru Warungan', primary:'#1463f6', hover:'#0f4dbf', accent:'#3b82f6' },
   { name:'Merah Resto', primary:'#b3261e', hover:'#8f1e18', accent:'#e07a1f' },
   { name:'Hijau Alami', primary:'#1b6d3b', hover:'#14512c', accent:'#f2a71b' },
   { name:'Biru Navy', primary:'#001f3f', hover:'#002a52', accent:'#0074D9' },
@@ -394,7 +395,7 @@ function OnboardingView({ onConnected }) {
     <div className="login-container">
       <div className="login-box">
         <div className="login-logo-ico login-logo-ico-brand"><img src="assets/logo-app.png" alt="POS Warungan" /></div>
-        <h2>Point of Sale Warung</h2>
+        <h2>Point of Sale Warungan</h2>
         {mode === 'connect'
           ? <ConnectWarungForm onConnected={onConnected} onSwitchMode={() => setMode('register')} />
           : <RegisterWarungForm onConnected={onConnected} onSwitchMode={() => setMode('connect')} />}
@@ -689,7 +690,7 @@ function DashboardView({ user, onNavigate }) {
     if (ctx1 && d.dailySales?.length) {
       const gr = ctx1.getContext('2d').createLinearGradient(0,0,0,280);
       gr.addColorStop(0,'rgba(179,38,30,0.45)'); gr.addColorStop(1,'rgba(179,38,30,0)');
-      const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--brand').trim() || '#b3261e';
+      const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--brand').trim() || '#1463f6';
       chartRefs.current.line = new Chart(ctx1, { type:'line', data:{ labels:d.dailySales.map(x=>x.date), datasets:[{ label:'Penjualan', data:d.dailySales.map(x=>x.amount), borderColor:primaryColor, backgroundColor:gr, fill:true, tension:0.4, pointRadius:0, pointHoverRadius:5, pointBackgroundColor:primaryColor, borderWidth:2.5 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{ backgroundColor:primaryColor, padding:10 } }, scales:{ y:{beginAtZero:true, ticks:{ font:{size:10} }, grid:{color:'#f0f0f0'} }, x:{grid:{display:false}, ticks:{font:{size:10}, maxRotation:0}} } } });
     }
     const ctx2 = document.getElementById('orderTypeChart');
@@ -698,7 +699,7 @@ function DashboardView({ user, onNavigate }) {
     }
     const ctx3 = document.getElementById('topCustChart');
     if (ctx3 && d.topCusts?.length) {
-      chartRefs.current.topCust = new Chart(ctx3, { type:'bar', data:{ labels:d.topCusts.slice(0,7).map(c=>c.name), datasets:[{ data:d.topCusts.slice(0,7).map(c=>c.total), backgroundColor:'rgba(224,122,31,0.75)', hoverBackgroundColor:'#b3261e', borderRadius:4, barThickness:18 }] }, options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{beginAtZero:true, grid:{display:false}, ticks:{font:{size:10}}}, y:{grid:{display:false}, ticks:{font:{size:11}}} } } });
+      chartRefs.current.topCust = new Chart(ctx3, { type:'bar', data:{ labels:d.topCusts.slice(0,7).map(c=>c.name), datasets:[{ data:d.topCusts.slice(0,7).map(c=>c.total), backgroundColor:'rgba(224,122,31,0.75)', hoverBackgroundColor:'#1463f6', borderRadius:4, barThickness:18 }] }, options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{beginAtZero:true, grid:{display:false}, ticks:{font:{size:10}}}, y:{grid:{display:false}, ticks:{font:{size:11}}} } } });
     }
     const ctx4 = document.getElementById('expDonutChart');
     if (ctx4 && d.expBreakdown) {
@@ -3422,15 +3423,15 @@ function SettingsView({ user, onSettingsUpdate }) {
             <div className="settings-grid">
               <div className="form-group">
                 <label>Warna Utama (Primary)</label>
-                <div className="color-picker-row"><input type="color" value={settings.theme_primary || '#b3261e'} onChange={(e) => updateField('theme_primary', e.target.value)} /><input type="text" value={settings.theme_primary || '#b3261e'} onChange={(e) => updateField('theme_primary', e.target.value)} /></div>
+                <div className="color-picker-row"><input type="color" value={settings.theme_primary || '#1463f6'} onChange={(e) => updateField('theme_primary', e.target.value)} /><input type="text" value={settings.theme_primary || '#1463f6'} onChange={(e) => updateField('theme_primary', e.target.value)} /></div>
               </div>
               <div className="form-group">
                 <label>Warna Utama saat Hover</label>
-                <div className="color-picker-row"><input type="color" value={settings.theme_primary_hover || '#8f1e18'} onChange={(e) => updateField('theme_primary_hover', e.target.value)} /><input type="text" value={settings.theme_primary_hover || '#8f1e18'} onChange={(e) => updateField('theme_primary_hover', e.target.value)} /></div>
+                <div className="color-picker-row"><input type="color" value={settings.theme_primary_hover || '#0f4dbf'} onChange={(e) => updateField('theme_primary_hover', e.target.value)} /><input type="text" value={settings.theme_primary_hover || '#0f4dbf'} onChange={(e) => updateField('theme_primary_hover', e.target.value)} /></div>
               </div>
               <div className="form-group">
                 <label>Warna Aksen (Accent)</label>
-                <div className="color-picker-row"><input type="color" value={settings.theme_accent || '#e07a1f'} onChange={(e) => updateField('theme_accent', e.target.value)} /><input type="text" value={settings.theme_accent || '#e07a1f'} onChange={(e) => updateField('theme_accent', e.target.value)} /></div>
+                <div className="color-picker-row"><input type="color" value={settings.theme_accent || '#3b82f6'} onChange={(e) => updateField('theme_accent', e.target.value)} /><input type="text" value={settings.theme_accent || '#3b82f6'} onChange={(e) => updateField('theme_accent', e.target.value)} /></div>
               </div>
             </div>
 
@@ -3442,9 +3443,9 @@ function SettingsView({ user, onSettingsUpdate }) {
             </div>
 
             <div className="theme-preview-bar">
-              <div className="theme-swatch" style={{background: settings.theme_primary || '#b3261e'}}>Utama</div>
-              <div className="theme-swatch" style={{background: settings.theme_primary_hover || '#8f1e18'}}>Hover</div>
-              <div className="theme-swatch" style={{background: settings.theme_accent || '#e07a1f'}}>Aksen</div>
+              <div className="theme-swatch" style={{background: settings.theme_primary || '#1463f6'}}>Utama</div>
+              <div className="theme-swatch" style={{background: settings.theme_primary_hover || '#0f4dbf'}}>Hover</div>
+              <div className="theme-swatch" style={{background: settings.theme_accent || '#3b82f6'}}>Aksen</div>
             </div>
           </div>
         )}
@@ -3547,7 +3548,7 @@ function ReportsView({ user }) {
 
   const renderReport = (type, d) => {
     if (!d) return;
-    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--brand').trim() || '#b3261e';
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--brand').trim() || '#1463f6';
     if (type === 'profit_loss' && d.dailyData?.length) {
       const ctx = document.getElementById('reportChart');
       if (ctx) { if (chartRef.current) chartRef.current.destroy(); chartRef.current = new Chart(ctx, { type:'bar', data:{ labels:d.dailyData.map(x => x.date), datasets:[ { label:'Penjualan', data:d.dailyData.map(x => x.sales), backgroundColor:'rgba(46,125,50,0.7)', borderRadius:3 }, { label:'Pembelian', data:d.dailyData.map(x => x.purchases), backgroundColor:'rgba(21,101,192,0.7)', borderRadius:3 }, { label:'Pengeluaran', data:d.dailyData.map(x => x.expenses), backgroundColor:'rgba(198,40,40,0.5)', borderRadius:3 } ]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:'top'} }, scales:{ y:{beginAtZero:true}, x:{grid:{display:false}} } } }); }
