@@ -11,7 +11,7 @@ const CONFIG = {
   // URL Apps Script Registry PUSAT (satu-satunya backend yang alamatnya tetap/hardcode).
   // Registry ini menyimpan daftar semua warung: kode -> URL Apps Script masing-masing warung.
   // GANTI dengan URL deploy Apps Script Registry milikmu.
-  REGISTRY_URL: 'https://script.google.com/macros/s/AKfycbzL4hhfBN5EugCSdbYlWDWgv6zF-aws8Xp2-KZIT4Syu1nIeqpmoJNAV_wt6sXuNlZt0Q/exec',
+  REGISTRY_URL: 'https://script.google.com/macros/s/AKfycbxaFz0t6918wJCwGP3tDIH6A8M1eDh6qd0m43Lvi2oRgEAFPaDDzs5gYJmjNSmpKI5-LQ/exec',
 
   // Diisi otomatis saat runtime dari Local Storage (hasil onboarding). Jangan diisi manual di sini.
   API_URL: null,
