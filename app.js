@@ -393,7 +393,7 @@ function OnboardingView({ onConnected }) {
   return (
     <div className="login-container">
       <div className="login-box">
-        <div className="login-logo-ico"><i className="fas fa-utensils"></i></div>
+        <div className="login-logo-ico login-logo-ico-brand"><img src="assets/logo-app.png" alt="POS Warungan" /></div>
         <h2>Point of Sale Warung</h2>
         {mode === 'connect'
           ? <ConnectWarungForm onConnected={onConnected} onSwitchMode={() => setMode('register')} />
