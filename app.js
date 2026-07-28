@@ -417,20 +417,29 @@ function ConnectWarungForm({ onConnected, onSwitchMode }) {
     setError('');
 
     try {
-      // Memperbaiki pemanggilan fetch secara langsung agar parameter menggunakan '?code='
       const response = await fetch(CONFIG.REGISTRY_URL + "?code=" + encodeURIComponent(code.trim()));
       const r = await response.json();
       
-      setLoading(false);
-      
       if (r.success) {
-        // Menyimpan URL database warung ke localStorage agar sistem tahu tujuannya
+        // Simpan data penting ke localStorage
         if (r.url) {
           localStorage.setItem('WARUNG_DB_URL', r.url);
         }
         localStorage.setItem('KODE_WARUNG', code.trim());
-        onConnected(); 
+        
+        // Coba panggil fungsi onConnected dari props, beri pengaman try-catch
+        try {
+          if (typeof onConnected === 'function') {
+            onConnected();
+          }
+        } catch (errRender) {
+          console.warn("onConnected error, memaksa reload...", errRender);
+        }
+        
+        // Paksa refresh halaman total untuk membersihkan state error dan masuk ke dashboard
+        window.location.reload(); 
       } else {
+        setLoading(false);
         setError(r.message || 'Kode warung tidak ditemukan');
       }
     } catch (err) {
