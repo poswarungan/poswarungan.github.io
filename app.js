@@ -26,8 +26,8 @@ async function _callRegistry(params) {
 
 async function _call(action, params) {
   if (!CONFIG.API_URL) throw new Error('API_URL belum diatur — hubungkan warung dulu');
-  const body = { action: action };
-  if (params) Object.assign(body, params);
+  const body = { action: action, payload: { args: [] } };
+  if (params) body.payload.args = Object.values(params);
   const res = await fetch(CONFIG.API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
