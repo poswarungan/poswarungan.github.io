@@ -16,12 +16,9 @@
 
 // ── API Client (jembatan ke Registry & backend Apps Script) ──
 
-async function _callRegistry(action, args) {
-  const res = await fetch(CONFIG.REGISTRY_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: action, payload: { args: args || [] } })
-  });
+async function _callRegistry(params) {
+  const qs = new URLSearchParams(params).toString();
+  const res = await fetch(CONFIG.REGISTRY_URL + '?' + qs);
   const text = await res.text();
   try { return JSON.parse(text); }
   catch(e) { return { success: false, message: 'Respon tidak valid dari registry' }; }
@@ -33,7 +30,7 @@ async function _call(action, params) {
   if (params) Object.assign(body, params);
   const res = await fetch(CONFIG.API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(body)
   });
   const text = await res.text();
@@ -45,7 +42,7 @@ window.API = {
 
   // Onboarding
   async connectWarung(code) {
-    const r = await _callRegistry('resolveWarung', [code]);
+    const r = await _callRegistry({ code: code });
     if (r.success && r.data && r.data.apiUrl) {
       saveWarungConnection(code, r.data.apiUrl, r.data.warungName);
       return { success: true };
@@ -53,7 +50,7 @@ window.API = {
     return { success: false, message: r.message || 'Kode warung tidak ditemukan' };
   },
   async registerWarung(code, url, name) {
-    const r = await _callRegistry('registerWarung', [{ code: code, apiUrl: url, warungName: name }]);
+    const r = await _callRegistry({ action: 'registerWarung', code: code, url: url, name: name });
     if (r.success) {
       saveWarungConnection(code, url, name);
       return { success: true };
