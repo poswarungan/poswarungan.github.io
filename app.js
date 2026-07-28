@@ -413,12 +413,26 @@ function ConnectWarungForm({ onConnected, onSwitchMode }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!code.trim()) return;
-    setLoading(true); setError('');
+    setLoading(true); 
+    setError('');
+
     try {
-      const r = await API.connectWarung(code.trim());
+      // Memperbaiki pemanggilan fetch secara langsung agar parameter menggunakan '?code='
+      const response = await fetch(CONFIG.REGISTRY_URL + "?code=" + encodeURIComponent(code.trim()));
+      const r = await response.json();
+      
       setLoading(false);
-      if (r.success) { onConnected(); }
-      else setError(r.message || 'Kode warung tidak ditemukan');
+      
+      if (r.success) {
+        // Menyimpan URL database warung ke localStorage agar sistem tahu tujuannya
+        if (r.url) {
+          localStorage.setItem('WARUNG_DB_URL', r.url);
+        }
+        localStorage.setItem('KODE_WARUNG', code.trim());
+        onConnected(); 
+      } else {
+        setError(r.message || 'Kode warung tidak ditemukan');
+      }
     } catch (err) {
       setLoading(false);
       setError('Tidak dapat terhubung ke server registry');
@@ -455,12 +469,25 @@ function RegisterWarungForm({ onConnected, onSwitchMode }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!warungName.trim() || !code.trim() || !apiUrl.trim()) return;
-    setLoading(true); setError('');
+    setLoading(true); 
+    setError('');
+
     try {
-      const r = await API.registerWarung(code.trim(), apiUrl.trim(), warungName.trim());
+      // Mengubah metode pengiriman pendaftaran menggunakan parameter URL yang kompatibel dengan Web App doGet/doPost
+      const targetUrl = `${CONFIG.REGISTRY_URL}?action=register&code=${encodeURIComponent(code.trim())}&url=${encodeURIComponent(apiUrl.trim())}&name=${encodeURIComponent(warungName.trim())}`;
+      
+      const response = await fetch(targetUrl);
+      const r = await response.json();
+      
       setLoading(false);
-      if (r.success) { onConnected(); }
-      else setError(r.message || 'Gagal mendaftarkan warung');
+      
+      if (r.success) {
+        localStorage.setItem('WARUNG_DB_URL', apiUrl.trim());
+        localStorage.setItem('KODE_WARUNG', code.trim());
+        onConnected(); 
+      } else {
+        setError(r.message || 'Gagal mendaftarkan warung');
+      }
     } catch (err) {
       setLoading(false);
       setError('Tidak dapat terhubung ke server registry');
