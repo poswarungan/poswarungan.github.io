@@ -39,9 +39,8 @@
 <body>
 <div id="root"></div>
 
-<!-- Urutan wajib: config -> api-client -> app (app.js bergantung pada CONFIG & API) -->
+<!-- Urutan: config.js dulu, lalu app.js (API client & React ada di app.js) -->
 <script src="config.js"></script>
-<script src="api-client.js"></script>
 <script type="text/babel" src="app.js"></script>
 
 <script>
