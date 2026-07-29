@@ -564,11 +564,11 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
 /* POS */
-.pos-layout { display: grid; grid-template-columns: 1fr 340px; gap: 0; height: calc(100vh - 140px); background: white; border-radius: 22px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.10); }
-.pos-left { padding: 22px 22px 40px; overflow-y: auto; border-right: 1px solid #e0e0e0; }
+.pos-layout { display: grid; grid-template-columns: 1fr 340px; gap: 0; height: calc(100vh - 140px); overflow: hidden; }
+.pos-left { padding: 22px 22px 40px; overflow-y: auto; background: white; border-right: 1px solid #e0e0e0; }
 .pos-right { padding: 22px; overflow-y: auto; background: #f8f9fa; display: flex; flex-direction: column; }
 /* ── Bar Kategori + Search: ringkas, sticky, search bukan lagi elemen dominan (sesuai brief poin 6 & 7) ── */
-.pos-topbar { position: sticky; top: 0; z-index: 20; background: white; padding-bottom: 10px; margin-bottom: 12px; }
+.pos-topbar { position: sticky; top: 0; z-index: 20; background: white; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid #e8e8e8; }
 .pos-cat-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: none; }
 .pos-cat-chips::-webkit-scrollbar { display: none; }
 .pos-chip { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--neutral-200); background: white; color: var(--neutral-700); font-size: var(--text-caption); font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; font-family: inherit; }
@@ -680,8 +680,8 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .pos-pay-tile.active { border-color: var(--navy-primary); background: var(--navy-primary); }
 .pos-pay-tile.active i, .pos-pay-tile.active .pos-pay-tile-lbl { color: white; }
 
-.pos-action-bar { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e8e8e8; }
-.pos-action-bar .btn { padding: 13px; font-size: 14px; font-weight: 700; }
+.pos-action-bar { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e8e8e8; }
+.pos-action-bar .btn { width: 100%; padding: 13px; font-size: 14px; font-weight: 700; }
 .pos-action-bar .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .pos-compact-input { width: 100%; padding: 9px 12px; border: 1px solid #d8e0e8; border-radius: 12px; font-size: 12px; resize: none; font-family: inherit; }
 .pos-compact-input:focus { outline: none; border-color: var(--navy-accent); }
