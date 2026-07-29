@@ -3009,8 +3009,8 @@ function POSView({ user }) {
             </div>
           </div>
           {cart.length > 0 && (
-            <div style={{marginBottom:'16px'}}>
-              <h4 style={{color:'var(--navy-primary)', marginBottom:'8px', display:'flex', alignItems:'center', gap:'8px'}}><i className="fas fa-shopping-cart"></i> Keranjang ({cart.length} item)</h4>
+            <div style={{marginBottom:'8px'}}>
+              <h4 style={{color:'var(--navy-primary)', marginBottom:'4px', display:'flex', alignItems:'center', gap:'6px', fontSize:'14px'}}><i className="fas fa-shopping-cart"></i> Keranjang ({cart.length} item)</h4>
               <div style={{border:'1px solid #e6e6e6', borderRadius:'16px', overflow:'hidden'}}>
               <table className="cart-table">
                 <thead><tr><th>#</th><th>Menu</th><th>Qty</th><th>Harga</th><th>Total</th><th>Catatan</th><th></th></tr></thead>
@@ -3029,7 +3029,7 @@ function POSView({ user }) {
               </div>
             </div>
           )}
-          <h4 style={{color:'#555', marginBottom:'8px'}}><i className="fas fa-utensils"></i> Menu Tersedia {!menuLoading && <>({displayMenu.length})</>}</h4>
+          <h4 style={{color:'#555', marginBottom:'4px', fontSize:'14px'}}><i className="fas fa-utensils"></i> Menu Tersedia {!menuLoading && <>({displayMenu.length})</>}</h4>
           {menuLoading ? (<div style={{padding:'30px 20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px'}}><div className="loading-progress" style={{width:'160px'}}><div className="loading-progress-bar"></div></div><span style={{fontSize:'13px', color:'#888'}}>Memuat menu...</span></div>) : displayMenu.length > 0 ? (
             <div className="pos-product-grid">
               {displayMenu.map(m => {
