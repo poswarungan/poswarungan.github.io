@@ -2958,8 +2958,8 @@ function POSView({ user }) {
   const handleSale = async (status) => {
     if (!cart.length) { Swal.fire({ icon:'warning', text:'Tambahkan item ke keranjang' }); return; }
     if (status === 'completed' && payMethod === 'tunai' && paid < grandTotal) {
-      const { isConfirmed } = await Swal.fire({ icon:'warning', text:'Pembayaran tunai kurang Rp ' + fmtRp(due) + '. Lanjutkan?', showCancelButton:true, confirmButtonText:'Ya, Lanjutkan', cancelButtonText:'Batal' });
-      if (!isConfirmed) return;
+      Swal.fire({ icon:'warning', text:'Pembayaran tunai kurang Rp ' + fmtRp(due) + '. Masukkan jumlah yang cukup.' });
+      return;
     }
     const paidCapped = Math.min(paid, grandTotal);
     setLoad(status === 'pending' ? 'Menahan transaksi...' : 'Menyelesaikan transaksi...');
@@ -3030,35 +3030,33 @@ function POSView({ user }) {
             </div>
           )}
           <h4 style={{color:'#555', marginBottom:'8px'}}><i className="fas fa-utensils"></i> Menu Tersedia {!menuLoading && <>({displayMenu.length})</>}</h4>
-          <div className="pos-products-wrap">
-            {menuLoading ? (<div style={{padding:'30px 20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px'}}><div className="loading-progress" style={{width:'160px'}}><div className="loading-progress-bar"></div></div><span style={{fontSize:'13px', color:'#888'}}>Memuat menu...</span></div>) : displayMenu.length > 0 ? (
-              <div className="pos-product-grid">
-                {displayMenu.map(m => {
-                  const qtyInCart = cartQtyMap[m.id] || 0;
-                  return (
-                  <div key={m.id} className="pos-product-card" onClick={() => addToCart(m)}>
-                    {!!m.track_stock && <span className={'ppc-qty-badge' + (m.stock_qty <= 5 ? ' low' : '')}><i className="fas fa-cubes"></i> Sisa {m.stock_qty}</span>}
-                    {m.image ? <img src={'https://lh3.google.com/u/0/d/' + m.image} className="ppc-img" alt={m.name} /> : <div className="ppc-img-ph"><i className="fas fa-utensils"></i></div>}
-                    <div className="ppc-serial">{m.name}</div>
-                    <div className="ppc-meta">{m.category_name}</div>
-                    <div className="ppc-price">
-                      <span>{fmtRp(m.price)}</span>
-                      {qtyInCart === 0 ? (
-                        <span className="ppc-add-btn"><i className="fas fa-plus"></i></span>
-                      ) : (
-                        <span className="ppc-stepper" onClick={(e) => e.stopPropagation()}>
-                          <button onClick={() => decrementCartItem(m.id)}><i className="fas fa-minus"></i></button>
-                          <span className="ppc-stepper-qty">{qtyInCart}</span>
-                          <button onClick={() => addToCart(m)}><i className="fas fa-plus"></i></button>
-                        </span>
-                      )}
-                    </div>
+          {menuLoading ? (<div style={{padding:'30px 20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px'}}><div className="loading-progress" style={{width:'160px'}}><div className="loading-progress-bar"></div></div><span style={{fontSize:'13px', color:'#888'}}>Memuat menu...</span></div>) : displayMenu.length > 0 ? (
+            <div className="pos-product-grid">
+              {displayMenu.map(m => {
+                const qtyInCart = cartQtyMap[m.id] || 0;
+                return (
+                <div key={m.id} className="pos-product-card" onClick={() => addToCart(m)}>
+                  {!!m.track_stock && <span className={'ppc-qty-badge' + (m.stock_qty <= 5 ? ' low' : '')}><i className="fas fa-cubes"></i> Sisa {m.stock_qty}</span>}
+                  {m.image ? <img src={'https://lh3.google.com/u/0/d/' + m.image} className="ppc-img" alt={m.name} /> : <div className="ppc-img-ph"><i className="fas fa-utensils"></i></div>}
+                  <div className="ppc-serial">{m.name}</div>
+                  <div className="ppc-meta">{m.category_name}</div>
+                  <div className="ppc-price">
+                    <span>{fmtRp(m.price)}</span>
+                    {qtyInCart === 0 ? (
+                      <span className="ppc-add-btn"><i className="fas fa-plus"></i></span>
+                    ) : (
+                      <span className="ppc-stepper" onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => decrementCartItem(m.id)}><i className="fas fa-minus"></i></button>
+                        <span className="ppc-stepper-qty">{qtyInCart}</span>
+                        <button onClick={() => addToCart(m)}><i className="fas fa-plus"></i></button>
+                      </span>
+                    )}
                   </div>
-                  );
-                })}
-              </div>
-            ) : (<div className="empty-state" style={{padding:'32px 20px'}}><i className="fas fa-utensils"></i><p>{searchQ ? 'Tidak ditemukan' : 'Belum ada menu di kategori ini'}</p><div className="empty-state-sub">{searchQ ? <>Tidak ada menu yang cocok dengan "{searchQ}"</> : 'Coba pilih kategori lain, atau tambahkan menu baru dari halaman Menu.'}</div></div>)}
-          </div>
+                </div>
+                );
+              })}
+            </div>
+          ) : (<div className="empty-state" style={{padding:'32px 20px'}}><i className="fas fa-utensils"></i><p>{searchQ ? 'Tidak ditemukan' : 'Belum ada menu di kategori ini'}</p><div className="empty-state-sub">{searchQ ? <>Tidak ada menu yang cocok dengan "{searchQ}"</> : 'Coba pilih kategori lain, atau tambahkan menu baru dari halaman Menu.'}</div></div>)}
         </div>
 
         <div className={'pos-right' + (mobileCartOpen ? ' mobile-open' : '')}>
@@ -3116,7 +3114,7 @@ function POSView({ user }) {
 
           <div className="pos-pane"><div className="pos-pane-title"><i className="fas fa-sticky-note"></i> Catatan</div><textarea rows="2" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Catatan internal (opsional)" className="pos-compact-input"></textarea></div>
 
-          <div className="pos-action-bar"><button className="btn btn-warning" onClick={() => handleSale('pending')} disabled={!cart.length}><i className="fas fa-pause"></i> Tahan</button><button className="btn btn-success" onClick={() => handleSale('completed')} disabled={!cart.length}><i className="fas fa-check-circle"></i> Selesaikan</button></div>
+          <div className="pos-action-bar"><button className="btn btn-success" onClick={() => handleSale('completed')} disabled={!cart.length || (payMethod === 'tunai' && paid < grandTotal)}><i className="fas fa-check-circle"></i> Selesaikan</button></div>
 
           {cart.length > 0 && (
             <div>
