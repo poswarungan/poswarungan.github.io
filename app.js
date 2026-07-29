@@ -2827,7 +2827,7 @@ function ThermalSlip({ data, slipRef }) {
       <div className="ts-row"><span>Subtotal</span><span>{fmtRp(d.subtotal||0)}</span></div>
       {(d.discount||0) > 0 && <div className="ts-row" style={{color:'#c62828'}}><span>Diskon</span><span>-{fmtRp(d.discount||0)}</span></div>}
       <div className="ts-row grand"><span>TOTAL</span><span>{fmtRp(d.grandTotal||0)}</span></div>
-      <div className="ts-row paid-row"><span>Tunai Diterima</span><span>{fmtRp(d.paid||0)}</span></div>
+      <div className="ts-row paid-row"><span>Dibayar</span><span>{fmtRp(d.paid||0)}</span></div>
       {(d.kembalian||0) > 0 && <div className="ts-row paid-row"><span>Kembalian</span><span>{fmtRp(d.kembalian||0)}</span></div>}
       {(d.due||0) > 0 && <div className="ts-row due-row"><span>Kurang Bayar</span><span>{fmtRp(d.due||0)}</span></div>}
       <div className="ts-row"><span>Metode</span><span>{d.payMethod || 'tunai'}</span></div>
@@ -2899,6 +2899,12 @@ function POSView({ user }) {
     API.getAvailableMenu(filterCat ? parseInt(filterCat) : 0).then(r => { if (r.success) { setAllMenu(r.data); swrSet(k, r.data); } setMenuLoading(false); }).catch(() => setMenuLoading(false));
   }, [filterCat]);
 
+  useEffect(() => {
+    if (payMethod === 'tunai') setPaidAmt('');
+    else if (payMethod === 'kredit') setPaidAmt('0');
+    else setPaidAmt(String(grandTotal));
+  }, [payMethod, grandTotal]);
+
   const displayMenu = React.useMemo(() => {
     let list = allMenu;
     if (searchQ.trim()) { const q = searchQ.trim().toLowerCase(); list = list.filter(m => m.name.toLowerCase().includes(q)); }
@@ -2951,6 +2957,10 @@ function POSView({ user }) {
 
   const handleSale = async (status) => {
     if (!cart.length) { Swal.fire({ icon:'warning', text:'Tambahkan item ke keranjang' }); return; }
+    if (status === 'completed' && payMethod === 'tunai' && paid < grandTotal) {
+      const { isConfirmed } = await Swal.fire({ icon:'warning', text:'Pembayaran tunai kurang Rp ' + fmtRp(due) + '. Lanjutkan?', showCancelButton:true, confirmButtonText:'Ya, Lanjutkan', cancelButtonText:'Batal' });
+      if (!isConfirmed) return;
+    }
     const paidCapped = Math.min(paid, grandTotal);
     setLoad(status === 'pending' ? 'Menahan transaksi...' : 'Menyelesaikan transaksi...');
     try {
@@ -3020,7 +3030,7 @@ function POSView({ user }) {
             </div>
           )}
           <h4 style={{color:'#555', marginBottom:'8px'}}><i className="fas fa-utensils"></i> Menu Tersedia {!menuLoading && <>({displayMenu.length})</>}</h4>
-          <div className="pos-products-wrap" style={{maxHeight: cart.length > 0 ? '320px' : '500px', overflowY:'auto'}}>
+          <div className="pos-products-wrap">
             {menuLoading ? (<div style={{padding:'30px 20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px'}}><div className="loading-progress" style={{width:'160px'}}><div className="loading-progress-bar"></div></div><span style={{fontSize:'13px', color:'#888'}}>Memuat menu...</span></div>) : displayMenu.length > 0 ? (
               <div className="pos-product-grid">
                 {displayMenu.map(m => {
@@ -3083,12 +3093,18 @@ function POSView({ user }) {
 
           <div className="pos-pane">
             <div className="pos-pane-title"><i className="fas fa-hand-holding-usd"></i> Pembayaran</div>
-            <div className="pos-line bordered"><span>Uang Diterima (Tunai)</span><input type="number" className="pos-line-input" value={paidAmt} onChange={(e) => setPaidAmt(e.target.value)} step="500" min="0" placeholder={String(grandTotal)} autoFocus /></div>
-            {kembalian > 0 ? (
-              <div className="pos-due-callout zero"><span className="pos-due-callout-lbl"><i className="fas fa-hand-holding-usd"></i> Kembalian</span><span className="pos-due-callout-val">{fmtRp(kembalian)}</span></div>
-            ) : due > 0 && paid > 0 ? (
-              <div className="pos-due-callout has"><span className="pos-due-callout-lbl"><i className="fas fa-exclamation-circle"></i> Kurang Bayar</span><span className="pos-due-callout-val">{fmtRp(due)}</span></div>
-            ) : null}
+            {payMethod === 'tunai' ? (<>
+              <div className="pos-line bordered"><span>Uang Diterima</span><input type="number" className="pos-line-input" value={paidAmt} onChange={(e) => setPaidAmt(e.target.value)} step="500" min="0" placeholder={String(grandTotal)} autoFocus /></div>
+              {kembalian > 0 ? (
+                <div className="pos-due-callout zero"><span className="pos-due-callout-lbl"><i className="fas fa-hand-holding-usd"></i> Kembalian</span><span className="pos-due-callout-val">{fmtRp(kembalian)}</span></div>
+              ) : due > 0 && paid > 0 ? (
+                <div className="pos-due-callout has"><span className="pos-due-callout-lbl"><i className="fas fa-exclamation-circle"></i> Kurang Bayar</span><span className="pos-due-callout-val">{fmtRp(due)}</span></div>
+              ) : null}
+            </>) : payMethod === 'kredit' ? (
+              <div className="pos-line bordered"><span>Kredit / Bayar Nanti</span><span style={{fontWeight:'700',color:'#e65100'}}>{fmtRp(grandTotal)}</span></div>
+            ) : (
+              <div className="pos-line bordered"><span>Pembayaran Penuh</span><span style={{fontWeight:'700',color:'#2e7d32'}}>{fmtRp(grandTotal)}</span></div>
+            )}
             <div style={{marginTop:'12px'}}>
               <div style={{fontSize:'11px', fontWeight:'600', color:'#666', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.4px'}}>Metode</div>
               <div className="pos-pay-grid">

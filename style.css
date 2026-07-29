@@ -588,7 +588,6 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .pos-result-serial { font-weight: 700; color: var(--navy-primary); }
 .pos-result-info { font-size: 12px; color: #888; }
 .pos-result-price { font-weight: 700; color: #2e7d32; }
-.pos-products-wrap { background: #fafbfc; border: 1px solid #e0e0e0; border-radius: 18px; }
 .pos-product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; padding: 12px; }
 .pos-product-card { background: white; border: 1px solid #e0e0e0; border-left: 4px solid var(--navy-accent); border-radius: 16px; padding: 12px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; gap: 5px; position: relative; overflow: hidden; }
 .pos-product-card:hover { border-color: var(--navy-accent); box-shadow: 0 4px 14px rgba(0,0,0,0.15); transform: translateY(-2px); }
