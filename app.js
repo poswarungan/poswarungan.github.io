@@ -24,10 +24,9 @@ async function _callRegistry(params) {
   catch(e) { return { success: false, message: 'Respon tidak valid dari registry' }; }
 }
 
-async function _call(action, params) {
+async function _call(action, args) {
   if (!CONFIG.API_URL) throw new Error('API_URL belum diatur — hubungkan warung dulu');
-  const body = { action: action, payload: { args: [] } };
-  if (params) body.payload.args = Object.values(params);
+  const body = { action, payload: { args: args || [] } };
   const res = await fetch(CONFIG.API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
@@ -63,16 +62,16 @@ window.API = {
 
   // Auth
   async login(email, password) {
-    return _call('login', { email: email, password: password });
+    return _call('login', [email, password]);
   },
   async sendForgotOTP(email) {
-    return _call('sendForgotOTP', { email: email });
+    return _call('sendForgotOTP', [email]);
   },
   async resetPassword(email, otp, newPassword) {
-    return _call('resetPassword', { email: email, otp: otp, newPassword: newPassword });
+    return _call('resetPassword', [email, otp, newPassword]);
   },
   async changePassword(userId, currentPassword, newPassword) {
-    return _call('changePassword', { userId: userId, currentPassword: currentPassword, newPassword: newPassword });
+    return _call('changePassword', [userId, currentPassword, newPassword]);
   },
 
   // Settings
@@ -80,58 +79,58 @@ window.API = {
     return _call('getSettings');
   },
   async saveAllSettings(settingsObj, userId, role) {
-    return _call('saveAllSettings', { settingsObj: JSON.stringify(settingsObj), userId: userId, role: role });
+    return _call('saveAllSettings', [settingsObj, userId, role]);
   },
   async saveBusinessLogo(logoData, userId, role) {
-    return _call('saveBusinessLogo', { logoData: JSON.stringify(logoData), userId: userId, role: role });
+    return _call('saveBusinessLogo', [logoData, userId, role]);
   },
   async removeBusinessLogo(userId, role) {
-    return _call('removeBusinessLogo', { userId: userId, role: role });
+    return _call('removeBusinessLogo', [userId, role]);
   },
 
   // Users
   async getUsers(userId, role) {
-    return _call('getUsers', { userId: userId, role: role });
+    return _call('getUsers', [userId, role]);
   },
   async addUser(userData, userId, role) {
-    return _call('addUser', { userData: JSON.stringify(userData), userId: userId, role: role });
+    return _call('addUser', [userData, userId, role]);
   },
   async updateUser(userData, userId, role) {
-    return _call('updateUser', { userData: JSON.stringify(userData), userId: userId, role: role });
+    return _call('updateUser', [userData, userId, role]);
   },
   async deleteUser(id, userId, role) {
-    return _call('deleteUser', { id: id, userId: userId, role: role });
+    return _call('deleteUser', [id, userId, role]);
   },
   async toggleUserStatus(id, userId, role) {
-    return _call('toggleUserStatus', { id: id, userId: userId, role: role });
+    return _call('toggleUserStatus', [id, userId, role]);
   },
 
   // Profile
   async getProfile(userId) {
-    return _call('getProfile', { userId: userId });
+    return _call('getProfile', [userId]);
   },
   async updateProfile(profileData, userId) {
-    return _call('updateProfile', { profileData: JSON.stringify(profileData), userId: userId });
+    return _call('updateProfile', [profileData, userId]);
   },
 
   // Categories
   async getCategories(userId, role) {
-    return _call('getCategories', { userId: userId, role: role });
+    return _call('getCategories', [userId, role]);
   },
   async addCategory(catData, userId, role) {
-    return _call('addCategory', { catData: JSON.stringify(catData), userId: userId, role: role });
+    return _call('addCategory', [catData, userId, role]);
   },
   async updateCategory(catData, userId, role) {
-    return _call('updateCategory', { catData: JSON.stringify(catData), userId: userId, role: role });
+    return _call('updateCategory', [catData, userId, role]);
   },
   async deleteCategory(id, userId, role) {
-    return _call('deleteCategory', { id: id, userId: userId, role: role });
+    return _call('deleteCategory', [id, userId, role]);
   },
   async toggleCategoryStatus(id, userId, role) {
-    return _call('toggleCategoryStatus', { id: id, userId: userId, role: role });
+    return _call('toggleCategoryStatus', [id, userId, role]);
   },
   async checkCategoryName(name, excludeId) {
-    return _call('checkCategoryName', { name: name, excludeId: excludeId });
+    return _call('checkCategoryName', [name, excludeId]);
   },
   async getCategoriesForDropdown() {
     return _call('getCategoriesForDropdown');
@@ -139,22 +138,22 @@ window.API = {
 
   // Suppliers
   async getSuppliers(userId, role) {
-    return _call('getSuppliers', { userId: userId, role: role });
+    return _call('getSuppliers', [userId, role]);
   },
   async addSupplier(spData, userId, role) {
-    return _call('addSupplier', { spData: JSON.stringify(spData), userId: userId, role: role });
+    return _call('addSupplier', [spData, userId, role]);
   },
   async updateSupplier(spData, userId, role) {
-    return _call('updateSupplier', { spData: JSON.stringify(spData), userId: userId, role: role });
+    return _call('updateSupplier', [spData, userId, role]);
   },
   async deleteSupplier(id, userId, role) {
-    return _call('deleteSupplier', { id: id, userId: userId, role: role });
+    return _call('deleteSupplier', [id, userId, role]);
   },
   async toggleSupplierStatus(id, userId, role) {
-    return _call('toggleSupplierStatus', { id: id, userId: userId, role: role });
+    return _call('toggleSupplierStatus', [id, userId, role]);
   },
   async getSupplierLedger(supplierId, userId, role) {
-    return _call('getSupplierLedger', { supplierId: supplierId, userId: userId, role: role });
+    return _call('getSupplierLedger', [supplierId, userId, role]);
   },
   async getSuppliersForDropdown() {
     return _call('getSuppliersForDropdown');
@@ -162,80 +161,80 @@ window.API = {
 
   // Purchases
   async getPurchases(userId, role) {
-    return _call('getPurchases', { userId: userId, role: role });
+    return _call('getPurchases', [userId, role]);
   },
   async addPurchase(puData, userId, role) {
-    return _call('addPurchase', { puData: JSON.stringify(puData), userId: userId, role: role });
+    return _call('addPurchase', [puData, userId, role]);
   },
   async updatePurchase(puData, userId, role) {
-    return _call('updatePurchase', { puData: JSON.stringify(puData), userId: userId, role: role });
+    return _call('updatePurchase', [puData, userId, role]);
   },
   async deletePurchase(id, userId, role) {
-    return _call('deletePurchase', { id: id, userId: userId, role: role });
+    return _call('deletePurchase', [id, userId, role]);
   },
   async getPurchaseDetail(id, userId, role) {
-    return _call('getPurchaseDetail', { id: id, userId: userId, role: role });
+    return _call('getPurchaseDetail', [id, userId, role]);
   },
   async addPayment(payData, userId, role) {
-    return _call('addPayment', { payData: JSON.stringify(payData), userId: userId, role: role });
+    return _call('addPayment', [payData, userId, role]);
   },
 
   // Menu
   async getMenuItems(userId, role) {
-    return _call('getMenuItems', { userId: userId, role: role });
+    return _call('getMenuItems', [userId, role]);
   },
   async addMenuItem(miData, userId, role) {
-    return _call('addMenuItem', { miData: JSON.stringify(miData), userId: userId, role: role });
+    return _call('addMenuItem', [miData, userId, role]);
   },
   async updateMenuItem(miData, userId, role) {
-    return _call('updateMenuItem', { miData: JSON.stringify(miData), userId: userId, role: role });
+    return _call('updateMenuItem', [miData, userId, role]);
   },
   async toggleMenuAvailability(id, userId, role) {
-    return _call('toggleMenuAvailability', { id: id, userId: userId, role: role });
+    return _call('toggleMenuAvailability', [id, userId, role]);
   },
   async deleteMenuItem(id, userId, role) {
-    return _call('deleteMenuItem', { id: id, userId: userId, role: role });
+    return _call('deleteMenuItem', [id, userId, role]);
   },
   async checkMenuName(name, excludeId) {
-    return _call('checkMenuName', { name: name, excludeId: excludeId });
+    return _call('checkMenuName', [name, excludeId]);
   },
   async getAvailableMenu(catId) {
-    return _call('getAvailableMenu', { catId: catId || 0 });
+    return _call('getAvailableMenu', [catId || 0]);
   },
   async searchMenu(query) {
-    return _call('searchMenu', { query: query });
+    return _call('searchMenu', [query]);
   },
   async bulkImportMenu(items, catId, userId, role) {
-    return _call('bulkImportMenu', { items: JSON.stringify(items), catId: catId, userId: userId, role: role });
+    return _call('bulkImportMenu', [items, catId, userId, role]);
   },
   async getMenuItemDetail(id) {
-    return _call('getMenuItemDetail', { id: id });
+    return _call('getMenuItemDetail', [id]);
   },
   async updateMenuStock(id, newStock, userId, role) {
-    return _call('updateMenuStock', { id: id, newStock: newStock, userId: userId, role: role });
+    return _call('updateMenuStock', [id, newStock, userId, role]);
   },
 
   // Customers
   async getCustomers(userId, role) {
-    return _call('getCustomers', { userId: userId, role: role });
+    return _call('getCustomers', [userId, role]);
   },
   async addCustomer(cuData, userId, role) {
-    return _call('addCustomer', { cuData: JSON.stringify(cuData), userId: userId, role: role });
+    return _call('addCustomer', [cuData, userId, role]);
   },
   async updateCustomer(cuData, userId, role) {
-    return _call('updateCustomer', { cuData: JSON.stringify(cuData), userId: userId, role: role });
+    return _call('updateCustomer', [cuData, userId, role]);
   },
   async deleteCustomer(id, userId, role) {
-    return _call('deleteCustomer', { id: id, userId: userId, role: role });
+    return _call('deleteCustomer', [id, userId, role]);
   },
   async toggleCustomerStatus(id, userId, role) {
-    return _call('toggleCustomerStatus', { id: id, userId: userId, role: role });
+    return _call('toggleCustomerStatus', [id, userId, role]);
   },
   async getCustomerLedger(custId, userId, role) {
-    return _call('getCustomerLedger', { custId: custId, userId: userId, role: role });
+    return _call('getCustomerLedger', [custId, userId, role]);
   },
   async addCustomerPayment(payData, userId, role) {
-    return _call('addCustomerPayment', { payData: JSON.stringify(payData), userId: userId, role: role });
+    return _call('addCustomerPayment', [payData, userId, role]);
   },
   async getCustomersForDropdown() {
     return _call('getCustomersForDropdown');
@@ -243,76 +242,76 @@ window.API = {
 
   // Sales / POS
   async completeSale(saleData, userId, role) {
-    return _call('completeSale', { saleData: JSON.stringify(saleData), userId: userId, role: role });
+    return _call('completeSale', [saleData, userId, role]);
   },
   async getSales(userId, role) {
-    return _call('getSales', { userId: userId, role: role });
+    return _call('getSales', [userId, role]);
   },
   async getSaleDetail(id, userId, role) {
-    return _call('getSaleDetail', { id: id, userId: userId, role: role });
+    return _call('getSaleDetail', [id, userId, role]);
   },
   async cancelSale(id, reason, userId, role) {
-    return _call('cancelSale', { id: id, reason: reason, userId: userId, role: role });
+    return _call('cancelSale', [id, reason, userId, role]);
   },
   async updateSale(saleData, userId, role) {
-    return _call('updateSale', { saleData: JSON.stringify(saleData), userId: userId, role: role });
+    return _call('updateSale', [saleData, userId, role]);
   },
   async addSaleItem(saleId, menuItemId, qty, userId, role) {
-    return _call('addSaleItem', { saleId: saleId, menuItemId: menuItemId, qty: qty, userId: userId, role: role });
+    return _call('addSaleItem', [saleId, menuItemId, qty, userId, role]);
   },
   async removeSaleItem(saleItemId, saleId, userId, role) {
-    return _call('removeSaleItem', { saleItemId: saleItemId, saleId: saleId, userId: userId, role: role });
+    return _call('removeSaleItem', [saleItemId, saleId, userId, role]);
   },
   async deleteSale(id, userId, role) {
-    return _call('deleteSale', { id: id, userId: userId, role: role });
+    return _call('deleteSale', [id, userId, role]);
   },
   async returnSaleItem(saleItemId, saleId, reason, userId, role) {
-    return _call('returnSaleItem', { saleItemId: saleItemId, saleId: saleId, reason: reason, userId: userId, role: role });
+    return _call('returnSaleItem', [saleItemId, saleId, reason, userId, role]);
   },
 
   // Payments
   async getPayments(userId, role) {
-    return _call('getPayments', { userId: userId, role: role });
+    return _call('getPayments', [userId, role]);
   },
 
   // Expenses
   async getExpenses(userId, role) {
-    return _call('getExpenses', { userId: userId, role: role });
+    return _call('getExpenses', [userId, role]);
   },
   async addExpense(exData, userId, role) {
-    return _call('addExpense', { exData: JSON.stringify(exData), userId: userId, role: role });
+    return _call('addExpense', [exData, userId, role]);
   },
   async updateExpense(exData, userId, role) {
-    return _call('updateExpense', { exData: JSON.stringify(exData), userId: userId, role: role });
+    return _call('updateExpense', [exData, userId, role]);
   },
   async deleteExpense(id, userId, role) {
-    return _call('deleteExpense', { id: id, userId: userId, role: role });
+    return _call('deleteExpense', [id, userId, role]);
   },
 
   // Import Logs
   async getImportLogs(userId, role) {
-    return _call('getImportLogs', { userId: userId, role: role });
+    return _call('getImportLogs', [userId, role]);
   },
 
   // Dashboard & Reports
   async getDashboardStats(userId, role) {
-    return _call('getDashboardStats', { userId: userId, role: role });
+    return _call('getDashboardStats', [userId, role]);
   },
   async getOverdueSummary(userId, role) {
-    return _call('getOverdueSummary', { userId: userId, role: role });
+    return _call('getOverdueSummary', [userId, role]);
   },
   async getReportsData(reportType, filters, userId, role) {
-    return _call('getReportsData', { reportType: reportType, filters: JSON.stringify(filters), userId: userId, role: role });
+    return _call('getReportsData', [reportType, filters, userId, role]);
   },
 
   // Logs
   async getLogs(userId, role, limit) {
-    return _call('getLogs', { userId: userId, role: role, limit: limit });
+    return _call('getLogs', [userId, role, limit]);
   },
 
   // Search
   async globalSearch(query, userId, role) {
-    return _call('globalSearch', { query: query, userId: userId, role: role });
+    return _call('globalSearch', [query, userId, role]);
   }
 };
 
