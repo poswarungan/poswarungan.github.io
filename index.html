@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Point of Sale Warungan">
+<meta name="apple-mobile-web-app-title" content="POS Warungan">
 
 <!-- CSS aplikasi (satu-satunya tempat CSS boleh berada) -->
 <link rel="stylesheet" href="style.css">
@@ -39,8 +39,9 @@
 <body>
 <div id="root"></div>
 
-<!-- Urutan: config.js dulu, lalu app.js (API client & React ada di app.js) -->
+<!-- Urutan wajib: config -> api -> app (app.js bergantung pada CONFIG & API) -->
 <script src="config.js"></script>
+<script src="api.js"></script>
 <script type="text/babel" src="app.js"></script>
 
 <script>

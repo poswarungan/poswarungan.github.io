@@ -13,307 +13,7 @@
  * yang sudah ada — bertentangan dengan RULE "jangan mengubah UI/fitur yang sudah ada".
  * Kalau kamu mau, ini bisa dirapikan bertahap per halaman di sesi berikutnya.
  */
-
-// ── API Client (jembatan ke Registry & backend Apps Script) ──
-
-async function _callRegistry(params) {
-  const qs = new URLSearchParams(params).toString();
-  const res = await fetch(CONFIG.REGISTRY_URL + '?' + qs);
-  const text = await res.text();
-  try { return JSON.parse(text); }
-  catch(e) { return { success: false, message: 'Respon tidak valid dari registry' }; }
-}
-
-async function _call(action, args) {
-  if (!CONFIG.API_URL) throw new Error('API_URL belum diatur — hubungkan warung dulu');
-  const body = { action, payload: { args: args || [] } };
-  const res = await fetch(CONFIG.API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(body)
-  });
-  const text = await res.text();
-  try { return JSON.parse(text); }
-  catch(e) { return { success: false, message: 'Respon tidak valid dari server: ' + text.substring(0,100) }; }
-}
-
-window.API = {
-
-  // Onboarding
-  async connectWarung(code) {
-    const r = await _callRegistry({ code: code });
-    if (r.success && r.data && r.data.apiUrl) {
-      saveWarungConnection(code, r.data.apiUrl, r.data.warungName);
-      return { success: true };
-    }
-    return { success: false, message: r.message || 'Kode warung tidak ditemukan' };
-  },
-  async registerWarung(code, url, name) {
-    const r = await _callRegistry({ action: 'registerWarung', code: code, url: url, name: name });
-    if (r.success) {
-      saveWarungConnection(code, url, name);
-      return { success: true };
-    }
-    return { success: false, message: r.message || 'Gagal mendaftarkan warung' };
-  },
-  disconnectWarung() {
-    clearWarungConnection();
-  },
-
-  // Auth
-  async login(email, password) {
-    return _call('login', [email, password]);
-  },
-  async sendForgotOTP(email) {
-    return _call('sendForgotOTP', [email]);
-  },
-  async resetPassword(email, otp, newPassword) {
-    return _call('resetPassword', [email, otp, newPassword]);
-  },
-  async changePassword(userId, currentPassword, newPassword) {
-    return _call('changePassword', [userId, currentPassword, newPassword]);
-  },
-
-  // Settings
-  async getSettings() {
-    return _call('getSettings');
-  },
-  async saveAllSettings(settingsObj, userId, role) {
-    return _call('saveAllSettings', [settingsObj, userId, role]);
-  },
-  async saveBusinessLogo(logoData, userId, role) {
-    return _call('saveBusinessLogo', [logoData, userId, role]);
-  },
-  async removeBusinessLogo(userId, role) {
-    return _call('removeBusinessLogo', [userId, role]);
-  },
-
-  // Users
-  async getUsers(userId, role) {
-    return _call('getUsers', [userId, role]);
-  },
-  async addUser(userData, userId, role) {
-    return _call('addUser', [userData, userId, role]);
-  },
-  async updateUser(userData, userId, role) {
-    return _call('updateUser', [userData, userId, role]);
-  },
-  async deleteUser(id, userId, role) {
-    return _call('deleteUser', [id, userId, role]);
-  },
-  async toggleUserStatus(id, userId, role) {
-    return _call('toggleUserStatus', [id, userId, role]);
-  },
-
-  // Profile
-  async getProfile(userId) {
-    return _call('getProfile', [userId]);
-  },
-  async updateProfile(profileData, userId) {
-    return _call('updateProfile', [profileData, userId]);
-  },
-
-  // Categories
-  async getCategories(userId, role) {
-    return _call('getCategories', [userId, role]);
-  },
-  async addCategory(catData, userId, role) {
-    return _call('addCategory', [catData, userId, role]);
-  },
-  async updateCategory(catData, userId, role) {
-    return _call('updateCategory', [catData, userId, role]);
-  },
-  async deleteCategory(id, userId, role) {
-    return _call('deleteCategory', [id, userId, role]);
-  },
-  async toggleCategoryStatus(id, userId, role) {
-    return _call('toggleCategoryStatus', [id, userId, role]);
-  },
-  async checkCategoryName(name, excludeId) {
-    return _call('checkCategoryName', [name, excludeId]);
-  },
-  async getCategoriesForDropdown() {
-    return _call('getCategoriesForDropdown');
-  },
-
-  // Suppliers
-  async getSuppliers(userId, role) {
-    return _call('getSuppliers', [userId, role]);
-  },
-  async addSupplier(spData, userId, role) {
-    return _call('addSupplier', [spData, userId, role]);
-  },
-  async updateSupplier(spData, userId, role) {
-    return _call('updateSupplier', [spData, userId, role]);
-  },
-  async deleteSupplier(id, userId, role) {
-    return _call('deleteSupplier', [id, userId, role]);
-  },
-  async toggleSupplierStatus(id, userId, role) {
-    return _call('toggleSupplierStatus', [id, userId, role]);
-  },
-  async getSupplierLedger(supplierId, userId, role) {
-    return _call('getSupplierLedger', [supplierId, userId, role]);
-  },
-  async getSuppliersForDropdown() {
-    return _call('getSuppliersForDropdown');
-  },
-
-  // Purchases
-  async getPurchases(userId, role) {
-    return _call('getPurchases', [userId, role]);
-  },
-  async addPurchase(puData, userId, role) {
-    return _call('addPurchase', [puData, userId, role]);
-  },
-  async updatePurchase(puData, userId, role) {
-    return _call('updatePurchase', [puData, userId, role]);
-  },
-  async deletePurchase(id, userId, role) {
-    return _call('deletePurchase', [id, userId, role]);
-  },
-  async getPurchaseDetail(id, userId, role) {
-    return _call('getPurchaseDetail', [id, userId, role]);
-  },
-  async addPayment(payData, userId, role) {
-    return _call('addPayment', [payData, userId, role]);
-  },
-
-  // Menu
-  async getMenuItems(userId, role) {
-    return _call('getMenuItems', [userId, role]);
-  },
-  async addMenuItem(miData, userId, role) {
-    return _call('addMenuItem', [miData, userId, role]);
-  },
-  async updateMenuItem(miData, userId, role) {
-    return _call('updateMenuItem', [miData, userId, role]);
-  },
-  async toggleMenuAvailability(id, userId, role) {
-    return _call('toggleMenuAvailability', [id, userId, role]);
-  },
-  async deleteMenuItem(id, userId, role) {
-    return _call('deleteMenuItem', [id, userId, role]);
-  },
-  async checkMenuName(name, excludeId) {
-    return _call('checkMenuName', [name, excludeId]);
-  },
-  async getAvailableMenu(catId) {
-    return _call('getAvailableMenu', [catId || 0]);
-  },
-  async searchMenu(query) {
-    return _call('searchMenu', [query]);
-  },
-  async bulkImportMenu(items, catId, userId, role) {
-    return _call('bulkImportMenu', [items, catId, userId, role]);
-  },
-  async getMenuItemDetail(id) {
-    return _call('getMenuItemDetail', [id]);
-  },
-  async updateMenuStock(id, newStock, userId, role) {
-    return _call('updateMenuStock', [id, newStock, userId, role]);
-  },
-
-  // Customers
-  async getCustomers(userId, role) {
-    return _call('getCustomers', [userId, role]);
-  },
-  async addCustomer(cuData, userId, role) {
-    return _call('addCustomer', [cuData, userId, role]);
-  },
-  async updateCustomer(cuData, userId, role) {
-    return _call('updateCustomer', [cuData, userId, role]);
-  },
-  async deleteCustomer(id, userId, role) {
-    return _call('deleteCustomer', [id, userId, role]);
-  },
-  async toggleCustomerStatus(id, userId, role) {
-    return _call('toggleCustomerStatus', [id, userId, role]);
-  },
-  async getCustomerLedger(custId, userId, role) {
-    return _call('getCustomerLedger', [custId, userId, role]);
-  },
-  async addCustomerPayment(payData, userId, role) {
-    return _call('addCustomerPayment', [payData, userId, role]);
-  },
-  async getCustomersForDropdown() {
-    return _call('getCustomersForDropdown');
-  },
-
-  // Sales / POS
-  async completeSale(saleData, userId, role) {
-    return _call('completeSale', [saleData, userId, role]);
-  },
-  async getSales(userId, role) {
-    return _call('getSales', [userId, role]);
-  },
-  async getSaleDetail(id, userId, role) {
-    return _call('getSaleDetail', [id, userId, role]);
-  },
-  async cancelSale(id, reason, userId, role) {
-    return _call('cancelSale', [id, reason, userId, role]);
-  },
-  async updateSale(saleData, userId, role) {
-    return _call('updateSale', [saleData, userId, role]);
-  },
-  async addSaleItem(saleId, menuItemId, qty, userId, role) {
-    return _call('addSaleItem', [saleId, menuItemId, qty, userId, role]);
-  },
-  async removeSaleItem(saleItemId, saleId, userId, role) {
-    return _call('removeSaleItem', [saleItemId, saleId, userId, role]);
-  },
-  async deleteSale(id, userId, role) {
-    return _call('deleteSale', [id, userId, role]);
-  },
-  async returnSaleItem(saleItemId, saleId, reason, userId, role) {
-    return _call('returnSaleItem', [saleItemId, saleId, reason, userId, role]);
-  },
-
-  // Payments
-  async getPayments(userId, role) {
-    return _call('getPayments', [userId, role]);
-  },
-
-  // Expenses
-  async getExpenses(userId, role) {
-    return _call('getExpenses', [userId, role]);
-  },
-  async addExpense(exData, userId, role) {
-    return _call('addExpense', [exData, userId, role]);
-  },
-  async updateExpense(exData, userId, role) {
-    return _call('updateExpense', [exData, userId, role]);
-  },
-  async deleteExpense(id, userId, role) {
-    return _call('deleteExpense', [id, userId, role]);
-  },
-
-  // Import Logs
-  async getImportLogs(userId, role) {
-    return _call('getImportLogs', [userId, role]);
-  },
-
-  // Dashboard & Reports
-  async getDashboardStats(userId, role) {
-    return _call('getDashboardStats', [userId, role]);
-  },
-  async getOverdueSummary(userId, role) {
-    return _call('getOverdueSummary', [userId, role]);
-  },
-  async getReportsData(reportType, filters, userId, role) {
-    return _call('getReportsData', [reportType, filters, userId, role]);
-  },
-
-  // Logs
-  async getLogs(userId, role, limit) {
-    return _call('getLogs', [userId, role, limit]);
-  },
-
-  // Search
-  async globalSearch(query, userId, role) {
-    return _call('globalSearch', [query, userId, role]);
-  }
-};
+// (serverCall/_activeReqs/_syncLoadingIcon dipindah ke api.js — network layer)
 
 var _swrCache = {};
 var _SWR_PFX = 'rpos_c_';
@@ -721,7 +421,8 @@ function ConnectWarungForm({ onConnected, onSwitchMode }) {
       else setError(r.message || 'Kode warung tidak ditemukan');
     } catch (err) {
       setLoading(false);
-      setError('Tidak dapat terhubung ke server registry');
+      setError('Error teknis: ' + (err && err.message ? err.message : String(err)));
+      console.error('connectWarung failed:', err);
     }
   };
 
@@ -763,7 +464,8 @@ function RegisterWarungForm({ onConnected, onSwitchMode }) {
       else setError(r.message || 'Gagal mendaftarkan warung');
     } catch (err) {
       setLoading(false);
-      setError('Tidak dapat terhubung ke server registry');
+      setError('Error teknis: ' + (err && err.message ? err.message : String(err)));
+      console.error('registerWarung failed:', err);
     }
   };
 
@@ -1100,9 +802,9 @@ function DashboardView({ user, onNavigate }) {
   return (
     <div>{Hero}{PrimaryCTA}{Alerts}{QuickActions}
       <div className="dash-kpis">
-        <div className="dash-kpi"><div className="dash-kpi-head"><div className="dash-kpi-ico" style={{background:'#34a853'}}><i className="fas fa-cash-register"></i></div>{ds.length >= 2 && <span className={'dash-kpi-trend ' + trendCls}><i className={'fas ' + trendIco}></i> {Math.abs(pct)}%</span>}</div><div className="dash-kpi-val">{tk(s?.todaySalesAmt)}</div><div className="dash-kpi-lbl">Penjualan Hari Ini</div>{ds.length >= 2 && <div className="dash-kpi-extra">vs kemarin {tk(yest)}</div>}</div>
+        <div className={'dash-kpi trend-highlight' + (ds.length >= 2 ? ' trend-' + trendCls : '')}><div className="dash-kpi-head"><div className="dash-kpi-ico" style={{background:'#34a853'}}><i className="fas fa-cash-register"></i></div>{ds.length >= 2 && <span className={'dash-kpi-trend ' + trendCls}><i className={'fas ' + trendIco}></i> {Math.abs(pct)}%</span>}</div><div className="dash-kpi-val">{tk(s?.todaySalesAmt)}</div><div className="dash-kpi-lbl">Penjualan Hari Ini</div>{ds.length >= 2 && <div className="dash-kpi-extra">vs kemarin {tk(yest)}</div>}</div>
         <div className="dash-kpi"><div className="dash-kpi-head"><div className="dash-kpi-ico" style={{background:'var(--navy)'}}><i className="fas fa-coins"></i></div></div><div className="dash-kpi-val">{tk(s?.todayCollectionAmt)}</div><div className="dash-kpi-lbl">Kas Masuk Hari Ini</div></div>
-        <div className="dash-kpi"><div className="dash-kpi-head"><div className="dash-kpi-ico" style={{background:'#ea4335'}}><i className="fas fa-exclamation-triangle"></i></div>{overdue?.customers?.length > 0 && <span className="dash-kpi-trend down"><i className="fas fa-bell"></i> {overdue.customers.length}</span>}</div><div className="dash-kpi-val danger">{tk(s?.totalCustDue)}</div><div className="dash-kpi-lbl">Piutang Pelanggan</div></div>
+        <div className={'dash-kpi' + (overdue?.customers?.length > 0 ? ' trend-down' : '')}><div className="dash-kpi-head"><div className="dash-kpi-ico" style={{background:'#ea4335'}}><i className="fas fa-exclamation-triangle"></i></div>{overdue?.customers?.length > 0 && <span className="dash-kpi-trend down"><i className="fas fa-bell"></i> {overdue.customers.length}</span>}</div><div className="dash-kpi-val danger">{tk(s?.totalCustDue)}</div><div className="dash-kpi-lbl">Piutang Pelanggan</div></div>
         <div className="dash-kpi"><div className="dash-kpi-head"><div className="dash-kpi-ico" style={{background:'#fbbc04'}}><i className="fas fa-handshake"></i></div></div><div className="dash-kpi-val">{tk(s?.totalSuppDue)}</div><div className="dash-kpi-lbl">Hutang Supplier</div></div>
         <div className="dash-kpi"><div className="dash-kpi-head"><div className="dash-kpi-ico" style={{background:'#6f42c1'}}><i className="fas fa-box"></i></div></div><div className="dash-kpi-val">{s?.availableMenuCount || 0}</div><div className="dash-kpi-lbl">Menu Tersedia</div></div>
         <div className="dash-kpi"><div className="dash-kpi-head"><div className="dash-kpi-ico" style={{background:'#00838f'}}><i className="fas fa-receipt"></i></div></div><div className="dash-kpi-val">{tk(s?.expThisMonth)}</div><div className="dash-kpi-lbl">Pengeluaran (Bulan Ini)</div></div>
@@ -2340,7 +2042,7 @@ function MenuDrawer({ user, categories, editingItem, onClose, onSaved }) {
   return (
     <div>
       <div className="drawer-overlay" onClick={onClose} style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:1000}}></div>
-      <div style={{position:'fixed', top:0, right:0, width:'480px', maxWidth:'95vw', height:'100vh', background:'white', zIndex:1001, boxShadow:'-4px 0 24px rgba(0,0,0,0.15)', overflowY:'auto', display:'flex', flexDirection:'column'}}>
+      <div style={{position:'fixed', top:0, right:0, width:'480px', maxWidth:'95vw', height:'100vh', background:'white', zIndex:1001, boxShadow:'-4px 0 24px rgba(0,0,0,0.15)', overflowY:'auto', overflowX:'hidden', display:'flex', flexDirection:'column'}}>
         <div className="modal-header" style={{borderRadius:0}}><h3><i className={isEdit ? 'fas fa-edit' : 'fas fa-plus-circle'}></i> {isEdit ? 'Ubah' : 'Tambah'} Menu</h3><button className="close-btn" onClick={onClose}><i className="fas fa-times"></i></button></div>
         <div style={{padding:'24px', flex:1}}>
           <form onSubmit={handleSubmit}>
@@ -2827,7 +2529,7 @@ function ThermalSlip({ data, slipRef }) {
       <div className="ts-row"><span>Subtotal</span><span>{fmtRp(d.subtotal||0)}</span></div>
       {(d.discount||0) > 0 && <div className="ts-row" style={{color:'#c62828'}}><span>Diskon</span><span>-{fmtRp(d.discount||0)}</span></div>}
       <div className="ts-row grand"><span>TOTAL</span><span>{fmtRp(d.grandTotal||0)}</span></div>
-      <div className="ts-row paid-row"><span>Dibayar</span><span>{fmtRp(d.paid||0)}</span></div>
+      <div className="ts-row paid-row"><span>Tunai Diterima</span><span>{fmtRp(d.paid||0)}</span></div>
       {(d.kembalian||0) > 0 && <div className="ts-row paid-row"><span>Kembalian</span><span>{fmtRp(d.kembalian||0)}</span></div>}
       {(d.due||0) > 0 && <div className="ts-row due-row"><span>Kurang Bayar</span><span>{fmtRp(d.due||0)}</span></div>}
       <div className="ts-row"><span>Metode</span><span>{d.payMethod || 'tunai'}</span></div>
@@ -2899,12 +2601,6 @@ function POSView({ user }) {
     API.getAvailableMenu(filterCat ? parseInt(filterCat) : 0).then(r => { if (r.success) { setAllMenu(r.data); swrSet(k, r.data); } setMenuLoading(false); }).catch(() => setMenuLoading(false));
   }, [filterCat]);
 
-  useEffect(() => {
-    if (payMethod === 'tunai') setPaidAmt('');
-    else if (payMethod === 'kredit') setPaidAmt('0');
-    else setPaidAmt(String(grandTotal));
-  }, [payMethod, grandTotal]);
-
   const displayMenu = React.useMemo(() => {
     let list = allMenu;
     if (searchQ.trim()) { const q = searchQ.trim().toLowerCase(); list = list.filter(m => m.name.toLowerCase().includes(q)); }
@@ -2955,12 +2651,17 @@ function POSView({ user }) {
   const due = Math.round((grandTotal - paid) * 100) / 100;
   const kembalian = paid > grandTotal ? Math.round((paid - grandTotal) * 100) / 100 : 0;
 
+  // Auto-isi jumlah bayar sesuai metode pembayaran (ditaruh SETELAH grandTotal dihitung —
+  // sebelumnya sempat di atas fungsi ini dan menyebabkan ReferenceError/crash karena
+  // memakai grandTotal sebelum konstanta itu didefinisikan).
+  useEffect(() => {
+    if (payMethod === 'tunai') setPaidAmt('');
+    else if (payMethod === 'kredit') setPaidAmt('0');
+    else setPaidAmt(String(grandTotal));
+  }, [payMethod]);
+
   const handleSale = async (status) => {
     if (!cart.length) { Swal.fire({ icon:'warning', text:'Tambahkan item ke keranjang' }); return; }
-    if (status === 'completed' && payMethod === 'tunai' && paid < grandTotal) {
-      Swal.fire({ icon:'warning', text:'Pembayaran tunai kurang Rp ' + fmtRp(due) + '. Masukkan jumlah yang cukup.' });
-      return;
-    }
     const paidCapped = Math.min(paid, grandTotal);
     setLoad(status === 'pending' ? 'Menahan transaksi...' : 'Menyelesaikan transaksi...');
     try {
@@ -3009,8 +2710,8 @@ function POSView({ user }) {
             </div>
           </div>
           {cart.length > 0 && (
-            <div style={{marginBottom:'8px'}}>
-              <h4 style={{color:'var(--navy-primary)', marginBottom:'4px', display:'flex', alignItems:'center', gap:'6px', fontSize:'14px'}}><i className="fas fa-shopping-cart"></i> Keranjang ({cart.length} item)</h4>
+            <div style={{marginBottom:'16px'}}>
+              <h4 style={{color:'var(--navy-primary)', marginBottom:'8px', display:'flex', alignItems:'center', gap:'8px'}}><i className="fas fa-shopping-cart"></i> Keranjang ({cart.length} item)</h4>
               <div style={{border:'1px solid #e6e6e6', borderRadius:'16px', overflow:'hidden'}}>
               <table className="cart-table">
                 <thead><tr><th>#</th><th>Menu</th><th>Qty</th><th>Harga</th><th>Total</th><th>Catatan</th><th></th></tr></thead>
@@ -3029,34 +2730,36 @@ function POSView({ user }) {
               </div>
             </div>
           )}
-          <h4 style={{color:'#555', marginBottom:'4px', fontSize:'14px'}}><i className="fas fa-utensils"></i> Menu Tersedia {!menuLoading && <>({displayMenu.length})</>}</h4>
-          {menuLoading ? (<div style={{padding:'30px 20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px'}}><div className="loading-progress" style={{width:'160px'}}><div className="loading-progress-bar"></div></div><span style={{fontSize:'13px', color:'#888'}}>Memuat menu...</span></div>) : displayMenu.length > 0 ? (
-            <div className="pos-product-grid">
-              {displayMenu.map(m => {
-                const qtyInCart = cartQtyMap[m.id] || 0;
-                return (
-                <div key={m.id} className="pos-product-card" onClick={() => addToCart(m)}>
-                  {!!m.track_stock && <span className={'ppc-qty-badge' + (m.stock_qty <= 5 ? ' low' : '')}><i className="fas fa-cubes"></i> Sisa {m.stock_qty}</span>}
-                  {m.image ? <img src={'https://lh3.google.com/u/0/d/' + m.image} className="ppc-img" alt={m.name} /> : <div className="ppc-img-ph"><i className="fas fa-utensils"></i></div>}
-                  <div className="ppc-serial">{m.name}</div>
-                  <div className="ppc-meta">{m.category_name}</div>
-                  <div className="ppc-price">
-                    <span>{fmtRp(m.price)}</span>
-                    {qtyInCart === 0 ? (
-                      <span className="ppc-add-btn"><i className="fas fa-plus"></i></span>
-                    ) : (
-                      <span className="ppc-stepper" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => decrementCartItem(m.id)}><i className="fas fa-minus"></i></button>
-                        <span className="ppc-stepper-qty">{qtyInCart}</span>
-                        <button onClick={() => addToCart(m)}><i className="fas fa-plus"></i></button>
-                      </span>
-                    )}
+          <h4 style={{color:'#555', marginBottom:'8px'}}><i className="fas fa-utensils"></i> Menu Tersedia {!menuLoading && <>({displayMenu.length})</>}</h4>
+          <div className="pos-products-wrap" style={{maxHeight: cart.length > 0 ? '320px' : '500px', overflowY:'auto', overflowX:'hidden'}}>
+            {menuLoading ? (<div style={{padding:'30px 20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px'}}><div className="loading-progress" style={{width:'160px'}}><div className="loading-progress-bar"></div></div><span style={{fontSize:'13px', color:'#888'}}>Memuat menu...</span></div>) : displayMenu.length > 0 ? (
+              <div className="pos-product-grid">
+                {displayMenu.map(m => {
+                  const qtyInCart = cartQtyMap[m.id] || 0;
+                  return (
+                  <div key={m.id} className="pos-product-card" onClick={() => addToCart(m)}>
+                    {!!m.track_stock && <span className={'ppc-qty-badge' + (m.stock_qty <= 5 ? ' low' : '')}><i className="fas fa-cubes"></i> Sisa {m.stock_qty}</span>}
+                    {m.image ? <img src={'https://lh3.google.com/u/0/d/' + m.image} className="ppc-img" alt={m.name} /> : <div className="ppc-img-ph"><i className="fas fa-utensils"></i></div>}
+                    <div className="ppc-serial">{m.name}</div>
+                    <div className="ppc-meta">{m.category_name}</div>
+                    <div className="ppc-price">
+                      <span>{fmtRp(m.price)}</span>
+                      {qtyInCart === 0 ? (
+                        <span className="ppc-add-btn"><i className="fas fa-plus"></i></span>
+                      ) : (
+                        <span className="ppc-stepper" onClick={(e) => e.stopPropagation()}>
+                          <button onClick={() => decrementCartItem(m.id)}><i className="fas fa-minus"></i></button>
+                          <span className="ppc-stepper-qty">{qtyInCart}</span>
+                          <button onClick={() => addToCart(m)}><i className="fas fa-plus"></i></button>
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                );
-              })}
-            </div>
-          ) : (<div className="empty-state" style={{padding:'32px 20px'}}><i className="fas fa-utensils"></i><p>{searchQ ? 'Tidak ditemukan' : 'Belum ada menu di kategori ini'}</p><div className="empty-state-sub">{searchQ ? <>Tidak ada menu yang cocok dengan "{searchQ}"</> : 'Coba pilih kategori lain, atau tambahkan menu baru dari halaman Menu.'}</div></div>)}
+                  );
+                })}
+              </div>
+            ) : (<div className="empty-state" style={{padding:'32px 20px'}}><i className="fas fa-utensils"></i><p>{searchQ ? 'Tidak ditemukan' : 'Belum ada menu di kategori ini'}</p><div className="empty-state-sub">{searchQ ? <>Tidak ada menu yang cocok dengan "{searchQ}"</> : 'Coba pilih kategori lain, atau tambahkan menu baru dari halaman Menu.'}</div></div>)}
+          </div>
         </div>
 
         <div className={'pos-right' + (mobileCartOpen ? ' mobile-open' : '')}>
@@ -3091,18 +2794,12 @@ function POSView({ user }) {
 
           <div className="pos-pane">
             <div className="pos-pane-title"><i className="fas fa-hand-holding-usd"></i> Pembayaran</div>
-            {payMethod === 'tunai' ? (<>
-              <div className="pos-line bordered"><span>Uang Diterima</span><input type="number" className="pos-line-input" value={paidAmt} onChange={(e) => setPaidAmt(e.target.value)} step="500" min="0" placeholder={String(grandTotal)} autoFocus /></div>
-              {kembalian > 0 ? (
-                <div className="pos-due-callout zero"><span className="pos-due-callout-lbl"><i className="fas fa-hand-holding-usd"></i> Kembalian</span><span className="pos-due-callout-val">{fmtRp(kembalian)}</span></div>
-              ) : due > 0 && paid > 0 ? (
-                <div className="pos-due-callout has"><span className="pos-due-callout-lbl"><i className="fas fa-exclamation-circle"></i> Kurang Bayar</span><span className="pos-due-callout-val">{fmtRp(due)}</span></div>
-              ) : null}
-            </>) : payMethod === 'kredit' ? (
-              <div className="pos-line bordered"><span>Kredit / Bayar Nanti</span><span style={{fontWeight:'700',color:'#e65100'}}>{fmtRp(grandTotal)}</span></div>
-            ) : (
-              <div className="pos-line bordered"><span>Pembayaran Penuh</span><span style={{fontWeight:'700',color:'#2e7d32'}}>{fmtRp(grandTotal)}</span></div>
-            )}
+            <div className="pos-line bordered"><span>Uang Diterima (Tunai)</span><input type="number" className="pos-line-input" value={paidAmt} onChange={(e) => setPaidAmt(e.target.value)} step="500" min="0" placeholder={String(grandTotal)} autoFocus /></div>
+            {kembalian > 0 ? (
+              <div className="pos-due-callout zero"><span className="pos-due-callout-lbl"><i className="fas fa-hand-holding-usd"></i> Kembalian</span><span className="pos-due-callout-val">{fmtRp(kembalian)}</span></div>
+            ) : due > 0 && paid > 0 ? (
+              <div className="pos-due-callout has"><span className="pos-due-callout-lbl"><i className="fas fa-exclamation-circle"></i> Kurang Bayar</span><span className="pos-due-callout-val">{fmtRp(due)}</span></div>
+            ) : null}
             <div style={{marginTop:'12px'}}>
               <div style={{fontSize:'11px', fontWeight:'600', color:'#666', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.4px'}}>Metode</div>
               <div className="pos-pay-grid">
@@ -3114,7 +2811,7 @@ function POSView({ user }) {
 
           <div className="pos-pane"><div className="pos-pane-title"><i className="fas fa-sticky-note"></i> Catatan</div><textarea rows="2" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Catatan internal (opsional)" className="pos-compact-input"></textarea></div>
 
-          <div className="pos-action-bar"><button className="btn btn-success" onClick={() => handleSale('completed')} disabled={!cart.length || (payMethod === 'tunai' && paid < grandTotal)}><i className="fas fa-check-circle"></i> Selesaikan</button></div>
+          <div className="pos-action-bar"><button className="btn btn-warning" onClick={() => handleSale('pending')} disabled={!cart.length}><i className="fas fa-pause"></i> Tahan</button><button className="btn btn-success" onClick={() => handleSale('completed')} disabled={!cart.length}><i className="fas fa-check-circle"></i> Selesaikan</button></div>
 
           {cart.length > 0 && (
             <div>
@@ -3386,7 +3083,7 @@ function SaleEditModal({ sale, customers, user, onClose, onSaved }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{maxWidth:'820px', maxHeight:'90vh', display:'flex', flexDirection:'column'}} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header"><h3><i className="fas fa-edit"></i> Ubah Transaksi — {sale.invoice_no}</h3><button className="close-btn" onClick={onClose}><i className="fas fa-times"></i></button></div>
-        <div className="modal-body" style={{overflowY:'auto', flex:1}}>
+        <div className="modal-body" style={{overflowY:'auto', overflowX:'hidden', flex:1}}>
           {loading ? (<div style={{padding:'40px 20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px'}}><div className="loading-progress" style={{width:'200px'}}><div className="loading-progress-bar"></div></div><span style={{fontSize:'14px', color:'#888'}}>Memuat detail transaksi...</span></div>) : detail ? (
             <div>
               {itemLoad && (<div style={{marginBottom:'16px', padding:'10px 16px', background:'#fdf1e6', borderRadius:'4px', display:'flex', alignItems:'center', gap:'12px'}}><div className="loading-progress" style={{width:'120px'}}><div className="loading-progress-bar"></div></div><span style={{fontSize:'13px', color:'var(--navy-accent)', fontWeight:'500'}}>{itemLoad}</span></div>)}
