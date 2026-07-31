@@ -2656,20 +2656,19 @@ function POSView({ user }) {
   // memakai grandTotal sebelum konstanta itu didefinisikan).
   useEffect(() => {
     if (payMethod === 'tunai') setPaidAmt('');
-    else if (payMethod === 'kredit') setPaidAmt('0');
     else setPaidAmt(String(grandTotal));
   }, [payMethod]);
 
-  const handleSale = async (status) => {
+  const handleSale = async () => {
     if (!cart.length) { Swal.fire({ icon:'warning', text:'Tambahkan item ke keranjang' }); return; }
+    if (payMethod === 'tunai' && paid < grandTotal) { Swal.fire({ icon:'warning', text:'Pembayaran tunai kurang Rp ' + fmtRp(due) + '. Masukkan jumlah yang cukup.' }); return; }
     const paidCapped = Math.min(paid, grandTotal);
-    setLoad(status === 'pending' ? 'Menahan transaksi...' : 'Menyelesaikan transaksi...');
+    setLoad('Menyelesaikan transaksi...');
     try {
-      const r = await API.completeSale({ customer_id: customerId || '', items: cart, discount: disc, paid_amount: status === 'pending' ? 0 : paidCapped, payment_method: payMethod, payment_reference: payRef, notes, status, order_type: orderType, table_no: tableNo }, user.id, user.role);
+      const r = await API.completeSale({ customer_id: customerId || '', items: cart, discount: disc, paid_amount: paidCapped, payment_method: payMethod, payment_reference: payRef, notes, status: 'completed', order_type: orderType, table_no: tableNo }, user.id, user.role);
       setLoad('');
       if (r.success) {
-        if (status !== 'pending') setShowInvoice({ invoice_no: r.data.invoice_no, customer: customers.find(c => c.id == customerId)?.name || 'Pelanggan Umum', orderType, tableNo, items: cart, subtotal, discount: disc, grandTotal, paid: status === 'pending' ? 0 : paid, kembalian, due: status === 'pending' ? grandTotal : due, payMethod, payRef, notes, date: new Date().toISOString() });
-        else Swal.fire({ icon:'success', text:'Pesanan ditahan — ' + r.data.invoice_no, timer:2000, showConfirmButton:false });
+        setShowInvoice({ invoice_no: r.data.invoice_no, customer: customers.find(c => c.id == customerId)?.name || 'Pelanggan Umum', orderType, tableNo, items: cart, subtotal, discount: disc, grandTotal, paid, kembalian, due, payMethod, payRef, notes, date: new Date().toISOString() });
         setCart([]); setDiscount('0'); setPaidAmt(''); setPayRef(''); setNotes(''); setCustomerId(''); setTableNo(''); setMobileCartOpen(false);
         const k = 'pos_menu_' + (filterCat || 0);
         API.getAvailableMenu(filterCat ? parseInt(filterCat) : 0).then(am => { if (am.success) { setAllMenu(am.data); swrSet(k, am.data); } });
@@ -2685,7 +2684,7 @@ function POSView({ user }) {
 
   const custOpts = customers.map(c => ({ value:String(c.id), label:c.name }));
   const catOpts = categories.map(c => ({ value:String(c.id), label:c.name }));
-  const methods = ['tunai','transfer','qris','ewallet','kredit'];
+  const methods = ['tunai','transfer','qris','ewallet'];
   const orderTypes = [{ v:'dine_in', ico:'fa-utensils', lbl:'Makan di Tempat' }, { v:'takeaway', ico:'fa-shopping-bag', lbl:'Bawa Pulang' }, { v:'delivery', ico:'fa-motorcycle', lbl:'Antar' }];
 
   return (
@@ -2731,7 +2730,7 @@ function POSView({ user }) {
             </div>
           )}
           <h4 style={{color:'#555', marginBottom:'8px'}}><i className="fas fa-utensils"></i> Menu Tersedia {!menuLoading && <>({displayMenu.length})</>}</h4>
-          <div className="pos-products-wrap" style={{maxHeight: cart.length > 0 ? '320px' : '500px', overflowY:'auto', overflowX:'hidden'}}>
+          <div className="pos-products-wrap">
             {menuLoading ? (<div style={{padding:'30px 20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px'}}><div className="loading-progress" style={{width:'160px'}}><div className="loading-progress-bar"></div></div><span style={{fontSize:'13px', color:'#888'}}>Memuat menu...</span></div>) : displayMenu.length > 0 ? (
               <div className="pos-product-grid">
                 {displayMenu.map(m => {
@@ -2794,24 +2793,30 @@ function POSView({ user }) {
 
           <div className="pos-pane">
             <div className="pos-pane-title"><i className="fas fa-hand-holding-usd"></i> Pembayaran</div>
-            <div className="pos-line bordered"><span>Uang Diterima (Tunai)</span><input type="number" className="pos-line-input" value={paidAmt} onChange={(e) => setPaidAmt(e.target.value)} step="500" min="0" placeholder={String(grandTotal)} autoFocus /></div>
-            {kembalian > 0 ? (
-              <div className="pos-due-callout zero"><span className="pos-due-callout-lbl"><i className="fas fa-hand-holding-usd"></i> Kembalian</span><span className="pos-due-callout-val">{fmtRp(kembalian)}</span></div>
-            ) : due > 0 && paid > 0 ? (
-              <div className="pos-due-callout has"><span className="pos-due-callout-lbl"><i className="fas fa-exclamation-circle"></i> Kurang Bayar</span><span className="pos-due-callout-val">{fmtRp(due)}</span></div>
-            ) : null}
+            {payMethod === 'tunai' ? (
+              <>
+                <div className="pos-line bordered"><span>Uang Diterima</span><input type="number" className="pos-line-input" value={paidAmt} onChange={(e) => setPaidAmt(e.target.value)} step="500" min="0" placeholder={String(grandTotal)} autoFocus /></div>
+                {kembalian > 0 ? (
+                  <div className="pos-due-callout zero"><span className="pos-due-callout-lbl"><i className="fas fa-hand-holding-usd"></i> Kembalian</span><span className="pos-due-callout-val">{fmtRp(kembalian)}</span></div>
+                ) : due > 0 && paid > 0 ? (
+                  <div className="pos-due-callout has"><span className="pos-due-callout-lbl"><i className="fas fa-exclamation-circle"></i> Kurang Bayar</span><span className="pos-due-callout-val">{fmtRp(due)}</span></div>
+                ) : null}
+              </>
+            ) : (
+              <div className="pos-line bordered"><span>Pembayaran Penuh</span><span style={{fontWeight:'700', color:'#2e7d32', fontSize:'16px'}}>{fmtRp(grandTotal)}</span></div>
+            )}
             <div style={{marginTop:'12px'}}>
               <div style={{fontSize:'11px', fontWeight:'600', color:'#666', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.4px'}}>Metode</div>
               <div className="pos-pay-grid">
-                {methods.map(m => { const ico = { tunai:'fa-money-bill-wave', transfer:'fa-university', qris:'fa-qrcode', ewallet:'fa-mobile-alt', kredit:'fa-credit-card' }[m] || 'fa-coins'; return (<button key={m} type="button" className={'pos-pay-tile ' + (payMethod===m?'active':'')} onClick={() => setPayMethod(m)}><i className={'fas ' + ico}></i><div className="pos-pay-tile-lbl">{m}</div></button>); })}
+                {methods.map(m => { const ico = { tunai:'fa-money-bill-wave', transfer:'fa-university', qris:'fa-qrcode', ewallet:'fa-mobile-alt' }[m] || 'fa-coins'; return (<button key={m} type="button" className={'pos-pay-tile ' + (payMethod===m?'active':'')} onClick={() => setPayMethod(m)}><i className={'fas ' + ico}></i><div className="pos-pay-tile-lbl">{m}</div></button>); })}
               </div>
-              <input type="text" value={payRef} onChange={(e) => setPayRef(e.target.value)} placeholder="Referensi / No. TXN (opsional)" className="pos-compact-input" style={{marginTop:'8px'}} />
+              {payMethod !== 'tunai' && <input type="text" value={payRef} onChange={(e) => setPayRef(e.target.value)} placeholder="Referensi / No. TXN (opsional)" className="pos-compact-input" style={{marginTop:'8px'}} />}
             </div>
           </div>
 
           <div className="pos-pane"><div className="pos-pane-title"><i className="fas fa-sticky-note"></i> Catatan</div><textarea rows="2" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Catatan internal (opsional)" className="pos-compact-input"></textarea></div>
 
-          <div className="pos-action-bar"><button className="btn btn-warning" onClick={() => handleSale('pending')} disabled={!cart.length}><i className="fas fa-pause"></i> Tahan</button><button className="btn btn-success" onClick={() => handleSale('completed')} disabled={!cart.length}><i className="fas fa-check-circle"></i> Selesaikan</button></div>
+          <div className="pos-action-bar"><button className="btn btn-success" onClick={handleSale} disabled={!cart.length || (payMethod === 'tunai' && paid < grandTotal)}><i className="fas fa-check-circle"></i> Selesaikan</button></div>
 
           {cart.length > 0 && (
             <div>
@@ -2949,7 +2954,7 @@ function SalesListView({ user, onNavigate }) {
   const handlePaySaved = () => { setPaySale(null); loadSales(); };
 
   const statusOpts = [{ value:'completed', label:'Selesai' },{ value:'pending', label:'Belum Lunas' },{ value:'cancelled', label:'Dibatalkan' }];
-  const methodOpts = ['tunai','transfer','qris','ewallet','kredit'].map(m => ({ value:m, label:m }));
+  const methodOpts = ['tunai','transfer','qris','ewallet'].map(m => ({ value:m, label:m }));
   const orderTypeOpts = [{ value:'dine_in', label:'Makan di Tempat' },{ value:'takeaway', label:'Bawa Pulang' },{ value:'delivery', label:'Antar' }];
   const applyFilters = () => {
     if (!tableRef.current) return;
@@ -3070,7 +3075,7 @@ function SaleEditModal({ sale, customers, user, onClose, onSaved }) {
   const paid = Math.min(parseFloat(form.paid_amount) || 0, grandTotal);
   const due = Math.round((grandTotal - paid) * 100) / 100;
   const custOpts = customers.map(c => ({ value: String(c.id), label: c.name }));
-  const methods = ['tunai','transfer','qris','ewallet','kredit'];
+  const methods = ['tunai','transfer','qris','ewallet'];
   const orderTypeOpts = [{ value:'dine_in', label:'Makan di Tempat' },{ value:'takeaway', label:'Bawa Pulang' },{ value:'delivery', label:'Antar' }];
 
   const handleSubmit = async (e) => {
