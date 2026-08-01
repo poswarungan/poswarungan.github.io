@@ -2586,14 +2586,6 @@ function POSView({ user }) {
   const searchRef = useRef(null);
   const debounceRef = useRef(null);
   const slipRef = useRef(null);
-  const paidInputRef = useRef(null);
-
-  useEffect(() => {
-    // Fokus otomatis ke kolom "Uang Diterima" saat halaman Kasir dibuka (tablet/desktop,
-    // karena panel ini tersembunyi secara default di HP — tidak akan memicu apa-apa di sana).
-    const t = setTimeout(() => paidInputRef.current?.focus(), 250);
-    return () => clearTimeout(t);
-  }, []);
 
   useEffect(() => {
     Promise.all([API.getCustomersForDropdown(), API.getCategoriesForDropdown()]).then(([cu, ca]) => {
@@ -2700,10 +2692,6 @@ function POSView({ user }) {
       <div className="pos-layout">
         <div className="pos-left">
           <div className="pos-topbar">
-            <div className="pos-cat-chips">
-              <button className={'pos-chip' + (!filterCat ? ' active' : '')} onClick={() => setFilterCat('')}>Semua</button>
-              {catOpts.map(c => (<button key={c.value} className={'pos-chip' + (filterCat === c.value ? ' active' : '')} onClick={() => setFilterCat(c.value)}>{c.label}</button>))}
-            </div>
             <div className="pos-search-compact">
               <i className="fas fa-search search-icon"></i>
               <input ref={searchRef} type="text" value={searchQ} onChange={(e) => doSearch(e.target.value)} placeholder="Cari menu..." autoComplete="off" />
@@ -2714,6 +2702,10 @@ function POSView({ user }) {
                   {!searching && results.length === 0 && searchQ.length > 1 && <div style={{padding:'12px', textAlign:'center', color:'#aaa'}}>Tidak ada hasil</div>}
                 </div>
               )}
+            </div>
+            <div className="pos-cat-chips">
+              <button className={'pos-chip' + (!filterCat ? ' active' : '')} onClick={() => setFilterCat('')}>Semua</button>
+              {catOpts.map(c => (<button key={c.value} className={'pos-chip' + (filterCat === c.value ? ' active' : '')} onClick={() => setFilterCat(c.value)}>{c.label}</button>))}
             </div>
           </div>
           {cart.length > 0 && (
@@ -2803,7 +2795,7 @@ function POSView({ user }) {
             <div className="pos-pane-title"><i className="fas fa-hand-holding-usd"></i> Pembayaran</div>
             {payMethod === 'tunai' ? (
               <>
-                <div className="pos-line bordered"><span>Uang Diterima</span><input ref={paidInputRef} type="number" className="pos-line-input" value={paidAmt} onChange={(e) => setPaidAmt(e.target.value)} step="500" min="0" placeholder={String(grandTotal)} /></div>
+                <div className="pos-line bordered"><span>Uang Diterima</span><input type="number" className="pos-line-input" value={paidAmt} onChange={(e) => setPaidAmt(e.target.value)} step="500" min="0" placeholder={String(grandTotal)} /></div>
                 {kembalian > 0 ? (
                   <div className="pos-due-callout zero"><span className="pos-due-callout-lbl"><i className="fas fa-hand-holding-usd"></i> Kembalian</span><span className="pos-due-callout-val">{fmtRp(kembalian)}</span></div>
                 ) : due > 0 && paid > 0 ? (
