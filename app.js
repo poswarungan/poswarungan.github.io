@@ -2586,6 +2586,14 @@ function POSView({ user }) {
   const searchRef = useRef(null);
   const debounceRef = useRef(null);
   const slipRef = useRef(null);
+  const paidInputRef = useRef(null);
+
+  useEffect(() => {
+    // Fokus otomatis ke kolom "Uang Diterima" saat halaman Kasir dibuka (tablet/desktop,
+    // karena panel ini tersembunyi secara default di HP — tidak akan memicu apa-apa di sana).
+    const t = setTimeout(() => paidInputRef.current?.focus(), 250);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     Promise.all([API.getCustomersForDropdown(), API.getCategoriesForDropdown()]).then(([cu, ca]) => {
@@ -2744,7 +2752,7 @@ function POSView({ user }) {
                     <div className="ppc-price">
                       <span>{fmtRp(m.price)}</span>
                       {qtyInCart === 0 ? (
-                        <span className="ppc-add-btn"><i className="fas fa-plus"></i></span>
+                        <span className="ppc-add-btn"><i className="fas fa-plus"></i> Add</span>
                       ) : (
                         <span className="ppc-stepper" onClick={(e) => e.stopPropagation()}>
                           <button onClick={() => decrementCartItem(m.id)}><i className="fas fa-minus"></i></button>
@@ -2795,7 +2803,7 @@ function POSView({ user }) {
             <div className="pos-pane-title"><i className="fas fa-hand-holding-usd"></i> Pembayaran</div>
             {payMethod === 'tunai' ? (
               <>
-                <div className="pos-line bordered"><span>Uang Diterima</span><input type="number" className="pos-line-input" value={paidAmt} onChange={(e) => setPaidAmt(e.target.value)} step="500" min="0" placeholder={String(grandTotal)} autoFocus /></div>
+                <div className="pos-line bordered"><span>Uang Diterima</span><input ref={paidInputRef} type="number" className="pos-line-input" value={paidAmt} onChange={(e) => setPaidAmt(e.target.value)} step="500" min="0" placeholder={String(grandTotal)} /></div>
                 {kembalian > 0 ? (
                   <div className="pos-due-callout zero"><span className="pos-due-callout-lbl"><i className="fas fa-hand-holding-usd"></i> Kembalian</span><span className="pos-due-callout-val">{fmtRp(kembalian)}</span></div>
                 ) : due > 0 && paid > 0 ? (
