@@ -1,11 +1,6 @@
-/**
- * service-worker.js
- * Meng-cache "app shell" (HTML/CSS/JS/asset statis) supaya web app:
+/* Meng-cache "app shell" (HTML/CSS/JS/asset statis) supaya web app:
  *  - bisa di-install seperti aplikasi native (syarat PWA)
  *  - tetap bisa dibuka (shell-nya) walau koneksi internet putus sesaat
- *
- * TIDAK menyimpan cache untuk request ke Apps Script (Google Sheets sebagai database
- * harus selalu diakses langsung/fresh, tidak boleh basi/offline).
  */
 
 const CACHE_NAME = 'pos-warung-shell-v1';
@@ -41,13 +36,10 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Jangan pernah cache/intercept request ke Google Apps Script (Registry maupun API warung).
-  // Data POS harus selalu fresh dari Google Sheets, tidak boleh disajikan dari cache offline.
   if (url.hostname.includes('script.google.com') || url.hostname.includes('script.googleusercontent.com')) {
-    return; // biarkan browser menangani seperti biasa (langsung ke network)
+    return;
   }
 
-  // Hanya proses request GET untuk asset milik app shell sendiri (same-origin).
   if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
 
   event.respondWith(
@@ -60,9 +52,8 @@ self.addEventListener('fetch', (event) => {
           }
           return res;
         })
-        .catch(() => cached); // offline -> fallback ke cache
+        .catch(() => cached);
 
-      // Cache-first untuk shell supaya buka app langsung cepat, tapi tetap update cache di background.
       return cached || networkFetch;
     })
   );

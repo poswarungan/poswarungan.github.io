@@ -1,19 +1,4 @@
-/**
- * app.js
- * Seluruh React Application: semua Component, semua Page, semua State, semua Routing.
- * TIDAK ADA fetch() atau google.script.run di sini — semua request backend lewat API.xxx()
- * (lihat api.js). Ini hasil migrasi 1:1 dari index.html lama (React di dalam Apps Script),
- * tanpa mengubah fitur maupun alur — hanya dipindah + serverCall() diganti API.xxx(),
- * ditambah gerbang onboarding multi-tenant (OnboardingView + App root) di paling bawah file.
- *
- * CATATAN JUJUR (technical debt, sengaja tidak diubah pada refactor tahap ini):
- * Banyak komponen di bawah masih memakai inline `style={{...}}` pada JSX alih-alih class
- * dari style.css. Ini perilaku ASLI dari kode sebelumnya (bukan hal baru yang saya tambahkan).
- * Menghapus semuanya butuh menulis ulang ratusan tempat dan berisiko mengubah tampilan/fitur
- * yang sudah ada — bertentangan dengan RULE "jangan mengubah UI/fitur yang sudah ada".
- * Kalau kamu mau, ini bisa dirapikan bertahap per halaman di sesi berikutnya.
- */
-// (serverCall/_activeReqs/_syncLoadingIcon dipindah ke api.js — network layer)
+/* Aplikasi Utama */
 
 var _swrCache = {};
 var _SWR_PFX = 'rpos_c_';
@@ -157,7 +142,7 @@ const { useState, useEffect, useRef } = React;
 function dtCleanup() { while ($.fn.dataTable.ext.search.length > 0) $.fn.dataTable.ext.search.pop(); }
 
 /* ── SearchableDropdown ── */
-/* ── Filter yang bisa dilipat — dipakai di semua halaman list, supaya tidak menghabiskan tinggi layar (brief poin 6) ── */
+
 function FilterPanel({ title = 'Filter', onClear, children, defaultOpen }) {
   const [open, setOpen] = useState(() => defaultOpen !== undefined ? defaultOpen : (typeof window !== 'undefined' ? window.innerWidth > 768 : true));
   return (
@@ -387,15 +372,15 @@ function LoginPage({ onLogin }) {
   );
 }
 
-/* ── Onboarding (Multi-Tenant: pilih warung dulu sebelum login) ── */
+/* ── Onboarding ── */
 function OnboardingView({ onConnected }) {
-  const [mode, setMode] = useState('connect'); // 'connect' | 'register'
+  const [mode, setMode] = useState('connect');
 
   return (
     <div className="login-container">
       <div className="login-box">
         <div className="login-logo-ico login-logo-ico-brand"><img src="assets/logo-app.png" alt="POS Warungan" /></div>
-        <h2>Point of Sale Warung</h2>
+        <h2>Point of Sale Warungan</h2>
         {mode === 'connect'
           ? <ConnectWarungForm onConnected={onConnected} onSwitchMode={() => setMode('register')} />
           : <RegisterWarungForm onConnected={onConnected} onSwitchMode={() => setMode('connect')} />}
@@ -498,7 +483,7 @@ function RegisterWarungForm({ onConnected, onSwitchMode }) {
   );
 }
 
-/* ── MainApp: login + dashboard untuk warung yang sudah terhubung ── */
+/* ── MainApp: login + dashboard ── */
 function MainApp() {
   const SESSION_KEY = 'respos_session';
   const SESSION_HOURS = 24;
@@ -520,7 +505,7 @@ function MainApp() {
   return (<div>{!isLoggedIn ? <LoginPage onLogin={handleLogin} /> : <DashboardLayout user={currentUser} onLogout={handleLogout} onSwitchWarung={handleSwitchWarung} onUserUpdate={(d) => setCurrentUser(prev => ({...prev, ...d}))} />}</div>);
 }
 
-/* ── App Root: gerbang multi-tenant — tentukan warung sebelum render MainApp ── */
+/* ── App Root ── */
 function App() {
   const [connected, setConnected] = useState(() => loadStoredConfig());
   if (!connected) return <OnboardingView onConnected={() => setConnected(true)} />;
@@ -882,7 +867,7 @@ function UsersView({ user }) {
             { data:'role', title:'Peran', render:(d) => '<span class="role-badge role-' + d + '">' + (ROLE_LABELS[d]||d) + '</span>' },
             { data:'is_active', title:'Status', render:(d) => '<span class="status-dot ' + (d==1?'active':'inactive') + '"></span>' + (d==1?'Aktif':'Nonaktif') },
             { data:'created_at', title:'Dibuat', render:(d) => fmtDateShort(d) },
-            { data:null, title:'Aksi', orderable:false, render:(_,__,row) => '<button class="action-icon edit-icon" data-action="edit"><i class="fas fa-edit"></i></button><button class="action-icon toggle-icon ' + (row.is_active==1?'':'off') + '" data-action="toggle"><i class="fas ' + (row.is_active==1?'fa-toggle-on':'fa-toggle-off') + '"></i></button><button class="action-icon delete-icon" data-action="delete"><i class="fas fa-trash"></i></button>' }
+            { data:null, title:'Aksi', orderable:false, responsivePriority:1, render:(_,__,row) => '<button class="action-icon edit-icon" data-action="edit"><i class="fas fa-edit"></i></button><button class="action-icon toggle-icon ' + (row.is_active==1?'':'off') + '" data-action="toggle"><i class="fas ' + (row.is_active==1?'fa-toggle-on':'fa-toggle-off') + '"></i></button><button class="action-icon delete-icon" data-action="delete"><i class="fas fa-trash"></i></button>' }
           ],
           pageLength:10, lengthMenu:[[10,25,50,100,-1],[10,25,50,100,"Semua"]], responsive:true, dom:'Blfrtip',
           buttons:[
@@ -1269,7 +1254,7 @@ function CategoriesView({ user }) {
             { data:'menu_count', title:'Jumlah Menu', className:'dt-center', render:(d) => '<span class="sub-badge ' + (d===0?'zero':'') + '">' + d + '</span>' },
             { data:'is_active', title:'Status', render:(d,_,row) => canWrite ? '<button class="action-icon toggle-icon ' + (d==1?'':'off') + '" data-action="toggle"><i class="fas ' + (d==1?'fa-toggle-on':'fa-toggle-off') + '"></i></button>' : '<span class="status-dot ' + (d==1?'active':'inactive') + '"></span>' + (d==1?'Aktif':'Nonaktif') },
             { data:'created_by_name', title:'Dibuat Oleh' }, { data:'created_at', title:'Tanggal', render:(d) => fmtDateShort(d) },
-            { data:null, title:'Aksi', orderable:false, render:(_,__,row) => {
+            { data:null, title:'Aksi', orderable:false, responsivePriority:1, render:(_,__,row) => {
               let h = '';
               if (canWrite) h += '<button class="action-icon edit-icon" data-action="edit"><i class="fas fa-edit"></i></button>';
               if (canDelete) { if (row.menu_count > 0) h += '<button class="action-icon delete-icon disabled" title="Masih ada menu terkait"><i class="fas fa-trash"></i></button>'; else h += '<button class="action-icon delete-icon" data-action="delete"><i class="fas fa-trash"></i></button>'; }
@@ -1431,7 +1416,7 @@ function SuppliersView({ user, openLedger }) {
             { data:'total_paid', title:'Total Dibayar', render:(d) => '<span class="paid-amount">' + fmtRp(d) + '</span>' },
             { data:'total_due', title:'Sisa Hutang', render:(d) => d > 0 ? '<span class="due-amount">' + fmtRp(d) + '</span>' : '<span style="color:#aaa">0</span>' },
             { data:'is_active', title:'Status', render:(d) => canWrite ? '<button class="action-icon toggle-icon ' + (d==1?'':'off') + '" data-action="toggle"><i class="fas ' + (d==1?'fa-toggle-on':'fa-toggle-off') + '"></i></button>' : '<span class="status-dot ' + (d==1?'active':'inactive') + '"></span>' },
-            { data:null, title:'Aksi', orderable:false, render:(_,__,row) => {
+            { data:null, title:'Aksi', orderable:false, responsivePriority:1, render:(_,__,row) => {
               let h = '';
               if (canWrite) h += '<button class="action-icon edit-icon" data-action="edit"><i class="fas fa-edit"></i></button>';
               h += '<button class="action-icon ledger-icon" data-action="ledger" title="Kartu Hutang"><i class="fas fa-file-invoice-dollar"></i></button>';
@@ -1551,7 +1536,7 @@ function SupplierLedgerView({ user, supplierId, goBack }) {
             { data:'paid_amount', title:'Dibayar', render:(d) => '<span class="paid-amount">' + fmtRp(d) + '</span>' },
             { data:'due', title:'Sisa', render:(d) => d > 0 ? '<span class="due-amount">' + fmtRp(d) + '</span>' : '<span style="color:#aaa">0</span>' },
             { data:'status', title:'Status', render:(d) => '<span class="pur-status pur-' + d + '">' + d + '</span>' },
-            { data:null, title:'', orderable:false, width:'40px', render:(_,__,row) => row.due > 0 && canWrite ? '<button class="action-icon" data-action="pay" title="Bayar" style="color:#2e7d32"><i class="fas fa-hand-holding-usd"></i></button>' : '' }
+            { data:null, title:'', orderable:false, responsivePriority:1, width:'40px', render:(_,__,row) => row.due > 0 && canWrite ? '<button class="action-icon" data-action="pay" title="Bayar" style="color:#2e7d32"><i class="fas fa-hand-holding-usd"></i></button>' : '' }
           ],
           pageLength:25, lengthMenu:[[25,50,100,-1],[25,50,100,"Semua"]], responsive:true, dom:'Blfrtip',
           buttons:[{ extend:'csv', text:'<i class="fas fa-file-csv"></i> CSV' },{ extend:'print', text:'<i class="fas fa-print"></i> Cetak' }],
@@ -1634,7 +1619,7 @@ function PurchasesView({ user, openDetail }) {
             { data:'due_amount', title:'Sisa', render:(d) => d > 0 ? '<span class="due-amount">' + fmtRp(d) + '</span>' : '<span style="color:#aaa">0</span>' },
             { data:'status', title:'Status', render:(d) => '<span class="pur-status pur-' + d + '">' + d + '</span>' },
             { data:'purchase_date', title:'Tanggal', render:(d) => fmtDateShort(d) },
-            { data:null, title:'', orderable:false, width:'90px', render:(_,__,row) => {
+            { data:null, title:'', orderable:false, responsivePriority:1, width:'90px', render:(_,__,row) => {
               let h = '<button class="action-icon ledger-icon" data-action="detail" title="Lihat Detail"><i class="fas fa-eye"></i></button>';
               if (canWrite) h += '<button class="action-icon edit-icon" data-action="edit" title="Ubah"><i class="fas fa-edit"></i></button>';
               if (canDelete) h += '<button class="action-icon delete-icon" data-action="delete"><i class="fas fa-trash"></i></button>';
@@ -1925,7 +1910,7 @@ function MenuView({ user }) {
             { data:'price', title:'Harga Jual', render:(d) => '<strong>' + fmtRp(d) + '</strong>' },
             { data:null, title:'Stok', className:'dt-center', render:(_,__,row) => row.track_stock ? '<span class="piece-badge ' + (row.stock_qty <= 5 ? 'sold' : 'avail') + '">' + row.stock_qty + '</span>' : '<span style="color:#aaa">Tanpa lacak</span>' },
             { data:'is_available', title:'Status', render:(d) => '<span class="pur-status ' + (d==1?'pur-completed':'pur-cancelled') + '">' + (d==1?'Tersedia':'Habis/Nonaktif') + '</span>' },
-            { data:null, title:'', orderable:false, width:'90px', render:(_,__,row) => {
+            { data:null, title:'', orderable:false, responsivePriority:1, width:'90px', render:(_,__,row) => {
               let h = '<button type="button" class="action-icon ledger-icon" data-action="detail" title="Lihat"><i class="fas fa-eye"></i></button>';
               if (canWrite) h += '<button type="button" class="action-icon edit-icon" data-action="edit" title="Ubah"><i class="fas fa-edit"></i></button>';
               h += '<button type="button" class="action-icon toggle-icon ' + (row.is_available==1?'':'off') + '" data-action="toggle" title="Toggle Tersedia"><i class="fas ' + (row.is_available==1?'fa-toggle-on':'fa-toggle-off') + '"></i></button>';
@@ -2239,7 +2224,7 @@ function BulkImportPageView({ user }) {
             { data:'total_rows', title:'Total', className:'dt-center' }, { data:'success_rows', title:'Berhasil', className:'dt-center', render:(d) => '<span class="paid-amount">' + d + '</span>' },
             { data:'failed_rows', title:'Gagal', className:'dt-center', render:(d) => d > 0 ? '<span class="due-amount">' + d + '</span>' : '0' },
             { data:'status', title:'Status', render:(d) => '<span class="pur-status imp-' + d + '">' + d + '</span>' }, { data:'created_by_name', title:'Oleh' }, { data:'created_at', title:'Tanggal', render:(d) => fmtDateShort(d) },
-            { data:null, title:'', orderable:false, width:'40px', render:(_,__,row) => row.failed_rows > 0 ? '<button class="action-icon ledger-icon" data-action="errors" title="Lihat error"><i class="fas fa-exclamation-triangle"></i></button>' : '' }
+            { data:null, title:'', orderable:false, responsivePriority:1, width:'40px', render:(_,__,row) => row.failed_rows > 0 ? '<button class="action-icon ledger-icon" data-action="errors" title="Lihat error"><i class="fas fa-exclamation-triangle"></i></button>' : '' }
           ],
           pageLength:10, responsive:true, dom:'Blfrtip', buttons:[{ extend:'csv', text:'CSV' }], order:[[7,'desc']]
         });
@@ -2307,7 +2292,7 @@ function CustomersView({ user, openLedger }) {
             { data:'total_paid', title:'Dibayar', render:(d) => '<span class="paid-amount">' + fmtRp(d) + '</span>' },
             { data:'total_due', title:'Piutang', render:(d) => d > 0 ? '<span class="due-alert"><i class="fas fa-exclamation-triangle"></i> <span class="due-amount">' + fmtRp(d) + '</span></span>' : '<span style="color:#aaa">0</span>' },
             { data:'is_active', title:'Status', render:(d) => canWrite ? '<button class="action-icon toggle-icon ' + (d==1?'':'off') + '" data-action="toggle"><i class="fas ' + (d==1?'fa-toggle-on':'fa-toggle-off') + '"></i></button>' : '<span class="status-dot ' + (d==1?'active':'inactive') + '"></span>' },
-            { data:null, title:'Aksi', orderable:false, render:(_,__,row) => {
+            { data:null, title:'Aksi', orderable:false, responsivePriority:1, render:(_,__,row) => {
               let h = '';
               if (canWrite) h += '<button class="action-icon edit-icon" data-action="edit"><i class="fas fa-edit"></i></button>';
               h += '<button class="action-icon ledger-icon" data-action="ledger" title="Kartu Piutang"><i class="fas fa-file-invoice"></i></button>';
@@ -2651,9 +2636,6 @@ function POSView({ user }) {
   const due = Math.round((grandTotal - paid) * 100) / 100;
   const kembalian = paid > grandTotal ? Math.round((paid - grandTotal) * 100) / 100 : 0;
 
-  // Auto-isi jumlah bayar sesuai metode pembayaran (ditaruh SETELAH grandTotal dihitung —
-  // sebelumnya sempat di atas fungsi ini dan menyebabkan ReferenceError/crash karena
-  // memakai grandTotal sebelum konstanta itu didefinisikan).
   useEffect(() => {
     if (payMethod === 'tunai') setPaidAmt('');
     else setPaidAmt(String(grandTotal));
@@ -2913,7 +2895,7 @@ function SalesListView({ user, onNavigate }) {
             { data:'payment_method', title:'Metode', render:(d) => '<span class="pay-method active" style="font-size:11px;padding:3px 8px;cursor:default">' + d + '</span>' },
             { data:'status', title:'Status', render:(d) => '<span class="pur-status pur-' + (d==='completed'?'completed':d==='pending'?'pending':'cancelled') + '">' + d + '</span>' },
             { data:'cashier_name', title:'Kasir' }, { data:'sale_date', title:'Tanggal', render:(d) => fmtDateShort(d) },
-            { data:null, title:'Aksi', orderable:false, width:'150px', render:(_,__,row) => {
+            { data:null, title:'Aksi', orderable:false, responsivePriority:1, width:'150px', render:(_,__,row) => {
               let h = '<button class="action-icon" data-action="print" title="Cetak Struk" style="color:var(--navy-primary)"><i class="fas fa-print"></i></button>';
               if (row.due_amount > 0 && row.status !== 'cancelled' && row.customer_id) h += '<button class="action-icon" data-action="pay" title="Terima Pembayaran" style="color:#2e7d32"><i class="fas fa-hand-holding-usd"></i></button>';
               if (canEdit && row.status !== 'cancelled') h += '<button class="action-icon edit-icon" data-action="edit" title="Ubah"><i class="fas fa-edit"></i></button>';
@@ -3226,7 +3208,7 @@ function ExpensesView({ user }) {
             { data:'category', title:'Kategori', render:(d) => '<span class="pur-status exp-' + d + '">' + (CAT_LABELS[d]||d) + '</span>' },
             { data:'amount', title:'Jumlah', render:(d) => '<strong>' + fmtRp(d) + '</strong>' },
             { data:'expense_date', title:'Tanggal', render:(d) => fmtDateShort(d) }, { data:'created_by_name', title:'Dicatat Oleh' },
-            { data:null, title:'', orderable:false, width:'70px', render:(_,__,row) => { let h = '<button class="action-icon edit-icon" data-action="edit"><i class="fas fa-edit"></i></button>'; if (canDelete) h += '<button class="action-icon delete-icon" data-action="delete"><i class="fas fa-trash"></i></button>'; return h; } }
+            { data:null, title:'', orderable:false, responsivePriority:1, width:'70px', render:(_,__,row) => { let h = '<button class="action-icon edit-icon" data-action="edit"><i class="fas fa-edit"></i></button>'; if (canDelete) h += '<button class="action-icon delete-icon" data-action="delete"><i class="fas fa-trash"></i></button>'; return h; } }
           ], pageLength:10, lengthMenu:[[10,25,50,-1],[10,25,50,"Semua"]], responsive:true, dom:'Blfrtip',
           buttons:[{ extend:'csv', text:'<i class="fas fa-file-csv"></i> CSV' },{ extend:'pdf', text:'<i class="fas fa-file-pdf"></i> PDF' },{ extend:'print', text:'<i class="fas fa-print"></i> Cetak' }], order:[[3,'desc']]
         });
@@ -3506,7 +3488,7 @@ function DueRemindersView({ user }) {
           { data:'name', title:'Nama', render:(d) => '<strong>' + d + '</strong>' }, { data:'phone', title:'Telepon', render:(d) => d ? '<a href="tel:' + d + '" class="car-link">' + d + '</a>' : '—' },
           { data:'total_due', title:'Jumlah Tagihan', render:(d) => '<span class="due-amount" style="font-weight:700">' + fmtRp(d) + '</span>' },
           { data:'days_overdue', title:'Hari Tertunda', render:(d) => { const cls = d <= 7 ? 'green' : d <= 30 ? 'orange' : 'red'; return '<span class="overdue-days ' + cls + '"><i class="fas fa-clock"></i> ' + d + 'h</span>'; } },
-          { data:null, title:'', orderable:false, width:'50px', render:(_,__,row) => { const p = String(row.phone||''); const ph = p ? (p.replace(/^0/,'62')).replace(/[^0-9]/g,'') : ''; if (!ph) return ''; const msg = encodeURIComponent('Pengingat: Anda memiliki tagihan tertunda sebesar ' + fmtRp(row.total_due) + '. Mohon segera diselesaikan. - ' + BN()); return '<a href="https://wa.me/' + ph + '?text=' + msg + '" target="_blank" class="wa-btn" style="padding:6px 10px;font-size:12px"><i class="fab fa-whatsapp"></i></a>'; } }
+          { data:null, title:'', orderable:false, responsivePriority:1, width:'50px', render:(_,__,row) => { const p = String(row.phone||''); const ph = p ? (p.replace(/^0/,'62')).replace(/[^0-9]/g,'') : ''; if (!ph) return ''; const msg = encodeURIComponent('Pengingat: Anda memiliki tagihan tertunda sebesar ' + fmtRp(row.total_due) + '. Mohon segera diselesaikan. - ' + BN()); return '<a href="https://wa.me/' + ph + '?text=' + msg + '" target="_blank" class="wa-btn" style="padding:6px 10px;font-size:12px"><i class="fab fa-whatsapp"></i></a>'; } }
         ], pageLength:25, responsive:true, dom:'Blfrtip', buttons:[{ extend:'csv', text:'CSV' },{ extend:'print', text:'Cetak' }], order:[[2,'desc']] });
       } catch(e){}
     }, 50);

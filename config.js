@@ -1,8 +1,4 @@
-/**
- * config.js
- * Konfigurasi global aplikasi POS Warung (Multi-Tenant Frontend)
- * Tidak boleh berisi logic bisnis. Hanya konstanta & helper baca/tulis konfigurasi.
- */
+/* Konfigurasi global aplikasi POS Warung (Multi-Tenant Frontend) */
 
 const CONFIG = {
   APP_NAME: 'Point of Sale Warungan',
