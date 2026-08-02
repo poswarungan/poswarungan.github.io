@@ -573,7 +573,7 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .pos-left { padding: 0; overflow-y: auto; overflow-x: hidden; min-width: 0; }
 .pos-right { padding: 20px; overflow-y: auto; overflow-x: hidden; background: white; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #eee; display: flex; flex-direction: column; min-width: 0; }
 
-.pos-topbar { position: sticky; top: 0; z-index: 20; background: white; padding: 0; margin-bottom: 10px; }
+.pos-topbar { position: sticky; top: 0; z-index: 20; background: white; padding: 0; margin-bottom: 10px; border-radius:16px;}
 .pos-cat-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 4px; scrollbar-width: none; }
 .pos-cat-chips::-webkit-scrollbar { display: none; }
 .pos-chip { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--neutral-200); background: white; color: var(--neutral-700); font-size: var(--text-caption); font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; font-family: inherit; }
