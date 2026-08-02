@@ -1,4 +1,4 @@
-/* Aplikasi Utama */
+/* Seluruh React Application: semua Component, semua Page, semua State, semua Routing */
 
 var _swrCache = {};
 var _SWR_PFX = 'rpos_c_';
@@ -142,7 +142,6 @@ const { useState, useEffect, useRef } = React;
 function dtCleanup() { while ($.fn.dataTable.ext.search.length > 0) $.fn.dataTable.ext.search.pop(); }
 
 /* ── SearchableDropdown ── */
-
 function FilterPanel({ title = 'Filter', onClear, children, defaultOpen }) {
   const [open, setOpen] = useState(() => defaultOpen !== undefined ? defaultOpen : (typeof window !== 'undefined' ? window.innerWidth > 768 : true));
   return (
@@ -372,7 +371,7 @@ function LoginPage({ onLogin }) {
   );
 }
 
-/* ── Onboarding ── */
+/* ── Onboarding (Multi-Tenant: pilih warung dulu sebelum login) ── */
 function OnboardingView({ onConnected }) {
   const [mode, setMode] = useState('connect');
 
@@ -483,7 +482,7 @@ function RegisterWarungForm({ onConnected, onSwitchMode }) {
   );
 }
 
-/* ── MainApp: login + dashboard ── */
+/* ── MainApp: login + dashboard untuk warung yang sudah terhubung ── */
 function MainApp() {
   const SESSION_KEY = 'respos_session';
   const SESSION_HOURS = 24;
@@ -505,7 +504,7 @@ function MainApp() {
   return (<div>{!isLoggedIn ? <LoginPage onLogin={handleLogin} /> : <DashboardLayout user={currentUser} onLogout={handleLogout} onSwitchWarung={handleSwitchWarung} onUserUpdate={(d) => setCurrentUser(prev => ({...prev, ...d}))} />}</div>);
 }
 
-/* ── App Root ── */
+/* ── App Root: gerbang multi-tenant — tentukan warung sebelum render MainApp ── */
 function App() {
   const [connected, setConnected] = useState(() => loadStoredConfig());
   if (!connected) return <OnboardingView onConnected={() => setConnected(true)} />;
@@ -2522,7 +2521,7 @@ function ThermalSlip({ data, slipRef }) {
       <div className="ts-div"></div>
       {d.notes && <div style={{fontSize:'10px', color:'#888', textAlign:'center', marginBottom:'4px'}}>{d.notes}</div>}
       <div className="ts-footer">{(_appSettings.invoice_footer) || 'Terima kasih atas kunjungan Anda!'}</div>
-      <div className="ts-footer" style={{marginTop:'4px'}}>Rameez Scripts</div>
+      <div className="ts-footer" style={{marginTop:'4px'}}>Tanpa Sorotan</div>
     </div>
   );
 }
@@ -2635,15 +2634,22 @@ function POSView({ user }) {
   const paid = parseFloat(paidAmt) || 0;
   const due = Math.round((grandTotal - paid) * 100) / 100;
   const kembalian = paid > grandTotal ? Math.round((paid - grandTotal) * 100) / 100 : 0;
+  const selectedCust = customers.find(c => c.id == customerId);
+  const canHutang = !!(selectedCust && String(selectedCust.phone || '').trim());
 
   useEffect(() => {
-    if (payMethod === 'tunai') setPaidAmt('');
+    if (payMethod === 'tunai' || payMethod === 'hutang') setPaidAmt('');
     else setPaidAmt(String(grandTotal));
   }, [payMethod]);
+
+  useEffect(() => {
+    if (payMethod === 'hutang' && !canHutang) setPayMethod('tunai');
+  }, [customerId]);
 
   const handleSale = async () => {
     if (!cart.length) { Swal.fire({ icon:'warning', text:'Tambahkan item ke keranjang' }); return; }
     if (payMethod === 'tunai' && paid < grandTotal) { Swal.fire({ icon:'warning', text:'Pembayaran tunai kurang Rp ' + fmtRp(due) + '. Masukkan jumlah yang cukup.' }); return; }
+    if (payMethod === 'hutang' && !canHutang) { Swal.fire({ icon:'warning', text:'Hutang cuma bisa dicatat untuk pelanggan terdaftar yang punya nomor telepon (buat penagihan nanti). Pilih pelanggan dulu atau lengkapi nomor teleponnya.' }); return; }
     const paidCapped = Math.min(paid, grandTotal);
     setLoad('Menyelesaikan transaksi...');
     try {
@@ -2660,13 +2666,13 @@ function POSView({ user }) {
 
   const handleQuickAddCust = async (name, phone) => {
     const r = await API.addCustomer({ name, phone }, user.id, user.role);
-    if (r.success) { const next = [...customers, { id: r.data.id, name: r.data.name }]; setCustomers(next); swrSet('pos_customers', next); setCustomerId(String(r.data.id)); setShowAddCust(false); Swal.fire({ icon:'success', text:'Pelanggan ditambahkan', timer:1200, showConfirmButton:false }); }
+    if (r.success) { const next = [...customers, { id: r.data.id, name: r.data.name, phone: phone || '' }]; setCustomers(next); swrSet('pos_customers', next); setCustomerId(String(r.data.id)); setShowAddCust(false); Swal.fire({ icon:'success', text:'Pelanggan ditambahkan', timer:1200, showConfirmButton:false }); }
     else Swal.fire({ icon:'error', text:r.message });
   };
 
   const custOpts = customers.map(c => ({ value:String(c.id), label:c.name }));
   const catOpts = categories.map(c => ({ value:String(c.id), label:c.name }));
-  const methods = ['tunai','transfer','qris','ewallet'];
+  const methods = ['tunai','transfer','qris','ewallet','hutang'];
   const orderTypes = [{ v:'dine_in', ico:'fa-utensils', lbl:'Makan di Tempat' }, { v:'takeaway', ico:'fa-shopping-bag', lbl:'Bawa Pulang' }, { v:'delivery', ico:'fa-motorcycle', lbl:'Antar' }];
 
   return (
@@ -2784,21 +2790,28 @@ function POSView({ user }) {
                   <div className="pos-due-callout has"><span className="pos-due-callout-lbl"><i className="fas fa-exclamation-circle"></i> Kurang Bayar</span><span className="pos-due-callout-val">{fmtRp(due)}</span></div>
                 ) : null}
               </>
+            ) : payMethod === 'hutang' ? (
+              <>
+                <div className="pos-line bordered"><span>Uang Muka (opsional)</span><input type="number" className="pos-line-input" value={paidAmt} onChange={(e) => setPaidAmt(e.target.value)} step="500" min="0" placeholder="0" /></div>
+                <div className="pos-due-callout has"><span className="pos-due-callout-lbl"><i className="fas fa-file-invoice-dollar"></i> Dicatat sebagai Hutang</span><span className="pos-due-callout-val">{fmtRp(due)}</span></div>
+                <div style={{fontSize:'12px', color:'#888', marginTop:'6px'}}><i className="fas fa-info-circle"></i> Akan muncul di Kartu Piutang & Pengingat Tagihan atas nama <strong>{selectedCust?.name || '-'}</strong>.</div>
+              </>
             ) : (
               <div className="pos-line bordered"><span>Pembayaran Penuh</span><span style={{fontWeight:'700', color:'#2e7d32', fontSize:'16px'}}>{fmtRp(grandTotal)}</span></div>
             )}
             <div style={{marginTop:'12px'}}>
               <div style={{fontSize:'11px', fontWeight:'600', color:'#666', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.4px'}}>Metode</div>
               <div className="pos-pay-grid">
-                {methods.map(m => { const ico = { tunai:'fa-money-bill-wave', transfer:'fa-university', qris:'fa-qrcode', ewallet:'fa-mobile-alt' }[m] || 'fa-coins'; return (<button key={m} type="button" className={'pos-pay-tile ' + (payMethod===m?'active':'')} onClick={() => setPayMethod(m)}><i className={'fas ' + ico}></i><div className="pos-pay-tile-lbl">{m}</div></button>); })}
+                {methods.map(m => { const ico = { tunai:'fa-money-bill-wave', transfer:'fa-university', qris:'fa-qrcode', ewallet:'fa-mobile-alt', hutang:'fa-file-invoice-dollar' }[m] || 'fa-coins'; const disabled = m === 'hutang' && !canHutang; return (<button key={m} type="button" className={'pos-pay-tile ' + (payMethod===m?'active':'') + (disabled?' disabled':'')} disabled={disabled} title={disabled ? 'Pilih pelanggan terdaftar dengan nomor telepon dulu' : ''} onClick={() => setPayMethod(m)}><i className={'fas ' + ico}></i><div className="pos-pay-tile-lbl">{m}</div></button>); })}
               </div>
-              {payMethod !== 'tunai' && <input type="text" value={payRef} onChange={(e) => setPayRef(e.target.value)} placeholder="Referensi / No. TXN (opsional)" className="pos-compact-input" style={{marginTop:'8px'}} />}
+              {payMethod !== 'tunai' && payMethod !== 'hutang' && <input type="text" value={payRef} onChange={(e) => setPayRef(e.target.value)} placeholder="Referensi / No. TXN (opsional)" className="pos-compact-input" style={{marginTop:'8px'}} />}
+              {payMethod === 'hutang' && !canHutang && <div style={{fontSize:'12px', color:'#c62828', marginTop:'8px'}}><i className="fas fa-exclamation-triangle"></i> Pilih pelanggan terdaftar yang punya nomor telepon dulu di bagian Pelanggan di atas.</div>}
             </div>
           </div>
 
           <div className="pos-pane"><div className="pos-pane-title"><i className="fas fa-sticky-note"></i> Catatan</div><textarea rows="2" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Catatan internal (opsional)" className="pos-compact-input"></textarea></div>
 
-          <div className="pos-action-bar"><button className="btn btn-success" onClick={handleSale} disabled={!cart.length || (payMethod === 'tunai' && paid < grandTotal)}><i className="fas fa-check-circle"></i> Selesaikan</button></div>
+          <div className="pos-action-bar"><button className="btn btn-success" onClick={handleSale} disabled={!cart.length || (payMethod === 'tunai' && paid < grandTotal) || (payMethod === 'hutang' && !canHutang)}><i className="fas fa-check-circle"></i> Selesaikan</button></div>
 
           {cart.length > 0 && (
             <div>

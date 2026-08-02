@@ -37,7 +37,7 @@
   --danger: var(--accent-danger);
   --info: var(--navy-accent);
 
-  /* ── Spacing scale ── */
+  /* ── Spacing scale (basis 4px, dipakai konsisten di seluruh komponen baru) ── */
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
   --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
 
@@ -45,11 +45,11 @@
   --text-display: 26px; --text-h1: 20px; --text-h2: 17px; --text-h3: 14.5px;
   --text-body: 14px; --text-caption: 12px; --text-label: 11px;
 
-  /* ── Neutral scale ── */
+  /* ── Neutral scale (dipakai buat border/bg sekunder, konsisten ganti abu-abu acak) ── */
   --neutral-50: #fafafa; --neutral-100: #f0f0f0; --neutral-200: #e5e5e5;
   --neutral-300: #d0d0d0; --neutral-500: #6b6b6b; --neutral-700: #4a4a4a;
 }
-/* Aksesibilitas */
+/* Aksesibilitas: outline fokus jelas buat navigasi keyboard (WCAG 2.4.7) */
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
   outline: 2.5px solid var(--navy-accent); outline-offset: 2px;
 }
@@ -198,7 +198,7 @@ input, select, textarea { font-size: 16px !important; touch-action: manipulation
 .dash-hero-stat-val { font-size: 20px; font-weight: 700; line-height: 1.1; }
 .dash-hero-stat-lbl { font-size: 10.5px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 3px; }
 
-/* ── CTA Utama: "Pesanan Baru" ── */
+/* ── CTA Utama: "Pesanan Baru" — satu-satunya elemen paling dominan di layar (Fitts's Law: target besar, gampang dijangkau) ── */
 .dash-cta-primary { display: flex; align-items: center; gap: 16px; width: 100%; background: linear-gradient(135deg, #34a853, #2a8a43); border: none; border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; cursor: pointer; box-shadow: 0 8px 22px rgba(52,168,83,0.32); transition: transform 0.15s ease, box-shadow 0.15s ease; text-align: left; font-family: inherit; }
 .dash-cta-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(52,168,83,0.4); }
 .dash-cta-primary:active { transform: scale(0.98); }
@@ -208,7 +208,7 @@ input, select, textarea { font-size: 16px !important; touch-action: manipulation
 .dash-cta-primary-sub { font-size: var(--text-caption); color: rgba(255,255,255,0.85); margin-top: 2px; }
 .dash-cta-primary-arrow { color: rgba(255,255,255,0.9); font-size: 18px; flex-shrink: 0; }
 
-
+/* Shortcut sekunder — lebih kecil dari CTA utama, mendukung tapi tidak bersaing perhatian */
 .dash-actions-secondary-title { font-size: var(--text-label); font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--neutral-500); margin: 4px 0 8px 2px; }
 
 .dash-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 18px; }
@@ -238,7 +238,7 @@ input, select, textarea { font-size: 16px !important; touch-action: manipulation
 .dash-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
 .dash-kpi { background: white; border-radius: 10px; padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #f0f0f0; border-left: 4px solid #e0e0e0; transition: all 0.2s; position: relative; overflow: hidden; }
 .dash-kpi:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-
+/* Border kiri berwarna sesuai tren — naik/turun/netral (permintaan: kartu mirip referensi SalesMetriX) */
 .dash-kpi.trend-up { border-left-color: #34a853; }
 .dash-kpi.trend-down { border-left-color: #ea4335; }
 .dash-kpi.trend-neutral { border-left-color: #bbb; }
@@ -573,7 +573,7 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .pos-left { padding: 0; overflow-y: auto; overflow-x: hidden; min-width: 0; }
 .pos-right { padding: 20px; overflow-y: auto; overflow-x: hidden; background: white; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #eee; display: flex; flex-direction: column; min-width: 0; }
 
-.pos-topbar { position: sticky; top: 0; z-index: 20; background: white; padding: 0; margin-bottom: 10px; border-radius: 16px;}
+.pos-topbar { position: sticky; top: 0; z-index: 20; background: white; padding: 0; margin-bottom: 10px; }
 .pos-cat-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 4px; scrollbar-width: none; }
 .pos-cat-chips::-webkit-scrollbar { display: none; }
 .pos-chip { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--neutral-200); background: white; color: var(--neutral-700); font-size: var(--text-caption); font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; font-family: inherit; }
@@ -631,7 +631,7 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .pos-pane { background: white; border: 1px solid #e8e8e8; border-radius: 18px; padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 .pos-pane-title { font-size: 12px; font-weight: 700; color: var(--navy-primary); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
 
-/* ── Floating cart bar (mobile) */
+/* ── Floating cart bar (mobile) ── */
 .pos-floating-cart { display: none; }
 .pos-mobile-checkout-close { display: none; }
 
@@ -685,6 +685,9 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
 .pos-pay-tile:hover i, .pos-pay-tile:hover .pos-pay-tile-lbl { color: var(--navy-accent); }
 .pos-pay-tile.active { border-color: var(--navy-primary); background: var(--navy-primary); }
 .pos-pay-tile.active i, .pos-pay-tile.active .pos-pay-tile-lbl { color: white; }
+.pos-pay-tile.disabled { opacity: 0.4; cursor: not-allowed; }
+.pos-pay-tile.disabled:hover { border-color: #d8e0e8; }
+.pos-pay-tile.disabled:hover i, .pos-pay-tile.disabled:hover .pos-pay-tile-lbl { color: #888; }
 
 .pos-action-bar { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e8e8e8; }
 .pos-action-bar .btn { width: 100%; padding: 15px; font-size: 15px; font-weight: 700; border-radius: 12px; }
@@ -812,7 +815,7 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
   .drawer { width: 100%; max-width: 100vw; }
   .pos-layout { grid-template-columns: 1fr; border-radius: 20px; height: auto; gap: 0; }
   .pos-product-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 10px; }
-  
+
   .pos-right { display: none; }
   .pos-right.mobile-open { display: flex; position: fixed; inset: 0; z-index: 1300; background: white; padding: 16px 16px 100px; overflow-y: auto; border-radius: 0; box-shadow: none; border: none; }
   .pos-mobile-checkout-close { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--navy-primary); font-size: 15px; margin-bottom: 14px; background: none; border: none; padding: 4px 0; cursor: pointer; }
