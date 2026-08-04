@@ -4,17 +4,15 @@ const CONFIG = {
   APP_NAME: 'Point of Sale Warungan',
   VERSION: '1.0.0',
 
-  // URL Apps Script Registry PUSAT (satu-satunya backend yang alamatnya tetap/hardcode).
-  // Registry ini menyimpan daftar semua warung: kode -> URL Apps Script masing-masing warung.
-  // GANTI dengan URL deploy Apps Script Registry milikmu.
+
   REGISTRY_URL: 'https://script.google.com/macros/s/AKfycbxaFz0t6918wJCwGP3tDIH6A8M1eDh6qd0m43Lvi2oRgEAFPaDDzs5gYJmjNSmpKI5-LQ/exec',
 
-  // Diisi otomatis saat runtime dari Local Storage (hasil onboarding). Jangan diisi manual di sini.
+
   API_URL: null,
   WARUNG_CODE: null,
   WARUNG_NAME: null,
 
-  // Tema default (akan ditimpa oleh Settings warung masing-masing setelah login)
+
   THEME_COLOR: '#1463f6',
   THEME_COLOR_HOVER: '#0f4dbf',
   THEME_ACCENT: '#3b82f6',
@@ -22,7 +20,7 @@ const CONFIG = {
   LOCAL_STORAGE_KEY: 'pos_warung_session'
 };
 
-// Key-key yang dipakai di Local Storage, dikelompokkan agar konsisten di seluruh app
+
 const STORAGE_KEYS = {
   API_URL: 'pos_api_url',
   WARUNG_CODE: 'pos_warung_code',
@@ -31,11 +29,7 @@ const STORAGE_KEYS = {
   THEME: 'pos_theme'
 };
 
-/**
- * Memuat konfigurasi tersimpan (API_URL, kode warung, dst) dari Local Storage ke CONFIG.
- * Dipanggil sekali saat aplikasi pertama kali dibuka (sebelum render App).
- * Return true jika warung sudah pernah terhubung (API_URL tersedia), false jika belum (perlu onboarding).
- */
+
 function loadStoredConfig() {
   try {
     const apiUrl = localStorage.getItem(STORAGE_KEYS.API_URL);
@@ -55,10 +49,7 @@ function loadStoredConfig() {
   }
 }
 
-/**
- * Menyimpan hasil onboarding (kode warung + API URL warung tersebut) ke Local Storage
- * dan meng-update CONFIG di memori. Dipanggil oleh api.js setelah Registry berhasil resolve kode warung.
- */
+
 function saveWarungConnection(warungCode, apiUrl, warungName) {
   try {
     localStorage.setItem(STORAGE_KEYS.API_URL, apiUrl);
@@ -75,10 +66,7 @@ function saveWarungConnection(warungCode, apiUrl, warungName) {
   }
 }
 
-/**
- * Menghapus koneksi warung dari Local Storage (mis. tombol "Ganti Warung" / logout total).
- * CONFIG.API_URL kembali null sehingga app menampilkan layar onboarding lagi.
- */
+
 function clearWarungConnection() {
   try {
     localStorage.removeItem(STORAGE_KEYS.API_URL);
@@ -94,10 +82,7 @@ function clearWarungConnection() {
   }
 }
 
-/**
- * Helper generik untuk baca/tulis object (mis. data user login, tema tersimpan) ke Local Storage.
- * Dipakai oleh app.js & api.js agar tidak menulis JSON.parse/stringify berulang-ulang.
- */
+
 function getStoredJSON(key) {
   try {
     const raw = localStorage.getItem(key);

@@ -1,4 +1,4 @@
-/* Seluruh React Application: semua Component, semua Page, semua State, semua Routing */
+/* Seluruh React Application */
 
 var _swrCache = {};
 var _SWR_PFX = 'rpos_c_';
@@ -142,6 +142,7 @@ const { useState, useEffect, useRef } = React;
 function dtCleanup() { while ($.fn.dataTable.ext.search.length > 0) $.fn.dataTable.ext.search.pop(); }
 
 /* ── SearchableDropdown ── */
+/* ── Filter yang bisa dilipat — dipakai di semua halaman list, supaya tidak menghabiskan tinggi layar (brief poin 6) ── */
 function FilterPanel({ title = 'Filter', onClear, children, defaultOpen }) {
   const [open, setOpen] = useState(() => defaultOpen !== undefined ? defaultOpen : (typeof window !== 'undefined' ? window.innerWidth > 768 : true));
   return (
@@ -3512,7 +3513,7 @@ function DueRemindersView({ user }) {
   return (
     <div>
       {data && (
-        <div style={{display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:'12px', marginBottom:'20px'}}>
+        <div className="quick-stats">
           <div className="stat-card" style={{borderLeftColor:'#c62828'}}><div className="stat-card-icon" style={{background:'#ea4335', width:'45px', height:'45px', fontSize:'20px'}}><i className="fas fa-user-friends"></i></div><div className="stat-card-value" style={{fontSize:'22px'}}>{fmtRp(data.totalCustDue||0)}</div><div className="stat-card-label">Piutang Pelanggan</div></div>
           <div className="stat-card" style={{borderLeftColor:'#e65100'}}><div className="stat-card-icon" style={{background:'#fbbc04', width:'45px', height:'45px', fontSize:'20px'}}><i className="fas fa-handshake"></i></div><div className="stat-card-value" style={{fontSize:'22px'}}>{fmtRp(data.totalSuppDue||0)}</div><div className="stat-card-label">Hutang Supplier</div></div>
           <div className="stat-card" style={{borderLeftColor:'#c62828'}}><div className="stat-card-icon" style={{background:'#ea4335', width:'45px', height:'45px', fontSize:'18px'}}><i className="fas fa-exclamation-triangle"></i></div><div className="stat-card-value" style={{fontSize:'22px'}}>{(data.buckets?.customers?.over_30||0) + (data.buckets?.suppliers?.over_30||0)}</div><div className="stat-card-label">Lebih dari 30 Hari</div></div>
@@ -3605,7 +3606,7 @@ function ReportsView({ user }) {
         <div>
           {activeReport === 'profit_loss' && (
             <div>
-              <div style={{display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:'12px', marginBottom:'20px'}}>
+              <div className="report-stat-grid-5">
                 <div className="stat-card" style={{borderLeftColor:'#2e7d32'}}><div className="stat-card-icon" style={{background:'#34a853', width:'45px', height:'45px', fontSize:'20px'}}><i className="fas fa-arrow-up"></i></div><div className="stat-card-value" style={{fontSize:'22px'}}>{fmtRp(data.totalSales||0)}</div><div className="stat-card-label">Penjualan ({data.salesCount||0})</div></div>
                 <div className="stat-card" style={{borderLeftColor:'#1565c0'}}><div className="stat-card-icon" style={{background:'#1565c0', width:'45px', height:'45px', fontSize:'20px'}}><i className="fas fa-arrow-down"></i></div><div className="stat-card-value" style={{fontSize:'22px'}}>{fmtRp(data.totalPurchases||0)}</div><div className="stat-card-label">Pembelian ({data.purchasesCount||0})</div></div>
                 <div className="stat-card" style={{borderLeftColor:'#c62828'}}><div className="stat-card-icon" style={{background:'#ea4335', width:'45px', height:'45px', fontSize:'20px'}}><i className="fas fa-receipt"></i></div><div className="stat-card-value" style={{fontSize:'22px'}}>{fmtRp(data.totalExpenses||0)}</div><div className="stat-card-label">Pengeluaran</div></div>
@@ -3617,7 +3618,7 @@ function ReportsView({ user }) {
           )}
           {activeReport === 'sales_summary' && (
             <div>
-              <div style={{display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'12px', marginBottom:'20px'}}>
+              <div className="report-stat-grid-3">
                 <div className="stat-card" style={{borderLeftColor:'#2e7d32'}}><div className="stat-card-icon" style={{background:'#34a853', width:'45px', height:'45px', fontSize:'20px'}}><i className="fas fa-coins"></i></div><div className="stat-card-value" style={{fontSize:'22px'}}>{fmtRp(data.totalAmount||0)}</div><div className="stat-card-label">Total Penjualan</div></div>
                 <div className="stat-card" style={{borderLeftColor:'var(--navy-primary)'}}><div className="stat-card-icon" style={{background:'var(--navy)', width:'45px', height:'45px', fontSize:'20px'}}><i className="fas fa-shopping-bag"></i></div><div className="stat-card-value" style={{fontSize:'22px'}}>{data.totalCount||0}</div><div className="stat-card-label">Total Transaksi</div></div>
                 <div className="stat-card" style={{borderLeftColor:'#6f42c1'}}><div className="stat-card-icon" style={{background:'#6f42c1', width:'45px', height:'45px', fontSize:'20px'}}><i className="fas fa-ticket-alt"></i></div><div className="stat-card-value" style={{fontSize:'22px'}}>{fmtRp(Math.round(data.avgTicket||0))}</div><div className="stat-card-label">Rata-rata per Struk</div></div>
@@ -3637,7 +3638,7 @@ function ReportsView({ user }) {
           )}
           {activeReport === 'customer_profit' && (
             <div>
-              <div style={{display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'12px', marginBottom:'20px'}}>
+              <div className="report-stat-grid-3">
                 <div className="stat-card" style={{borderLeftColor:'#6f42c1'}}><div className="stat-card-icon" style={{background:'#6f42c1', width:'45px', height:'45px', fontSize:'20px'}}><i className="fas fa-users"></i></div><div className="stat-card-value" style={{fontSize:'22px'}}>{data.customers?.length||0}</div><div className="stat-card-label">Pelanggan Aktif</div></div>
                 <div className="stat-card" style={{borderLeftColor:'#2e7d32'}}><div className="stat-card-icon" style={{background:'#34a853', width:'45px', height:'45px', fontSize:'20px'}}><i className="fas fa-coins"></i></div><div className="stat-card-value" style={{fontSize:'22px'}}>{fmtRp((data.customers||[]).reduce((s,c) => s + c.totalSales, 0))}</div><div className="stat-card-label">Total Pendapatan</div></div>
                 <div className="stat-card" style={{borderLeftColor:'var(--navy-primary)'}}><div className="stat-card-icon" style={{background:'var(--navy)', width:'45px', height:'45px', fontSize:'20px'}}><i className="fas fa-shopping-bag"></i></div><div className="stat-card-value" style={{fontSize:'22px'}}>{(data.customers||[]).reduce((s,c) => s + c.saleCount, 0)}</div><div className="stat-card-label">Total Transaksi</div></div>

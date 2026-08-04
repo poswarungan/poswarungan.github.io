@@ -16,13 +16,14 @@ project/
     config.js
     manifest.json
     service-worker.js
-    assets/            <- kamu perlu isi sendiri (lihat bagian Assets)
+    assets/
   backend/
     Code.gs
     Api.gs
     Database.gs
-  Registry.gs           <- PROJECT APPS SCRIPT TERPISAH (lihat bagian Registry)
+  Registry.gs
   README.md
+  Kebijakan.md
 ```
 
 ## Cara kerja multi-tenant
