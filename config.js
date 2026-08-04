@@ -5,7 +5,7 @@ const CONFIG = {
   VERSION: '1.0.0',
 
 
-  REGISTRY_URL: 'https://script.google.com/macros/s/AKfycbxaFz0t6918wJCwGP3tDIH6A8M1eDh6qd0m43Lvi2oRgEAFPaDDzs5gYJmjNSmpKI5-LQ/exec',
+  REGISTRY_URL: 'https://script.google.com/macros/s/AKfycbxjjYjUMpz5UXiwUqjISPh12KDy0dvDN4fY12PbD1IVorRs1RdeEbJFGhF7wi4pNUlO/exec',
 
 
   API_URL: null,
