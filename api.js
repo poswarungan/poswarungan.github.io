@@ -1,4 +1,4 @@
-/* Penyambung ke luar*/
+
 
 const API = (() => {
 
@@ -9,22 +9,29 @@ const API = (() => {
     if (el) el.style.display = _activeReqs > 0 ? 'inline-block' : 'none';
   }
 
-  // ── Core request handler
-  async function callUrl(baseUrl, action, args) {
+  // ── Core request handler ──────────────────────────────────────────────
+  async function callUrl(baseUrl, action, args, attempt = 1) {
     _activeReqs++; _syncLoadingIcon();
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
       const res = await fetch(baseUrl, {
         method: 'POST',
-        
+
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action, payload: { args: args || [] } })
+        body: JSON.stringify({ action, payload: { args: args || [] } }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (!res.ok) {
+
+        if (attempt < 3) { await new Promise(r => setTimeout(r, 500 * attempt)); return callUrl(baseUrl, action, args, attempt + 1); }
         return { success: false, message: `Server error (HTTP ${res.status})` };
       }
       return await res.json();
     } catch (e) {
+      if (attempt < 3) { await new Promise(r => setTimeout(r, 500 * attempt)); return callUrl(baseUrl, action, args, attempt + 1); }
       console.error('API call failed:', action, e);
       return { success: false, message: 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.' };
     } finally {
@@ -46,7 +53,7 @@ const API = (() => {
   }
 
   return {
-    
+
     call,
 
     // ── Onboarding / Registry ────────────────────────────────────────────
@@ -70,7 +77,7 @@ const API = (() => {
       clearWarungConnection();
     },
 
-    // ── Utilitas file ───────────
+    // ── Utilitas file (dipakai untuk upload logo / gambar menu) ───────────
     fileToBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -80,7 +87,7 @@ const API = (() => {
       });
     },
 
-    // ── API Warung ───────────────────────────────────────────────────────
+    // ── Semua action API yang ada di Apps Script warung ───────────────────
     addCategory: (...args) => call('addCategory', args),
   addCustomer: (...args) => call('addCustomer', args),
   addCustomerPayment: (...args) => call('addCustomerPayment', args),
