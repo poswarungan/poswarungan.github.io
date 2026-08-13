@@ -1,4 +1,6 @@
-/* Seluruh React Application */
+/**
+ * SWR (Stale While Revalidate) Cache Implementation
+ */
 
 var _swrCache = {};
 var _SWR_PFX = 'rpos_c_';
@@ -142,7 +144,7 @@ const { useState, useEffect, useRef } = React;
 function dtCleanup() { while ($.fn.dataTable.ext.search.length > 0) $.fn.dataTable.ext.search.pop(); }
 
 /* ── SearchableDropdown ── */
-/* ── Filter yang bisa dilipat — dipakai di semua halaman list, supaya tidak menghabiskan tinggi layar (brief poin 6) ── */
+
 function FilterPanel({ title = 'Filter', onClear, children, defaultOpen }) {
   const [open, setOpen] = useState(() => defaultOpen !== undefined ? defaultOpen : (typeof window !== 'undefined' ? window.innerWidth > 768 : true));
   return (
@@ -374,7 +376,7 @@ function LoginPage({ onLogin }) {
 
 /* ── Onboarding (Multi-Tenant: pilih warung dulu sebelum login) ── */
 function OnboardingView({ onConnected }) {
-  const [mode, setMode] = useState('connect');
+  const [mode, setMode] = useState('connect'); // 'connect' | 'register'
 
   return (
     <div className="login-container">
@@ -545,8 +547,8 @@ function DashboardLayout({ user, onLogout, onSwitchWarung, onUserUpdate }) {
   const canSeeExpenses = isAdmin || isManager;
   const canSeeImports = isAdmin || isManager;
 
-  const pageLabels = { dashboard:'Dashboard', users:'Manajemen Pengguna', categories:'Kategori Menu', suppliers:'Supplier', supplier_ledger:'Kartu Hutang Supplier', purchases:'Pembelian Bahan Baku', purchase_detail:'Detail Pembelian', menu:'Menu', bulk_import:'Impor Massal Menu', customers:'Pelanggan', customer_ledger:'Kartu Piutang Pelanggan', pos:'Kasir / Pesanan Baru', sales:'Daftar Transaksi', payments:'Pembayaran', expenses:'Pengeluaran', due_reminders:'Pengingat Tagihan', reports:'Laporan', settings:'Pengaturan', account:'Akun Saya', logs:'Log Aktivitas', about:'Tentang Aplikasi' };
-  const pageIcons = { dashboard:'fas fa-chart-line', users:'fas fa-users-cog', categories:'fas fa-th-large', suppliers:'fas fa-handshake', supplier_ledger:'fas fa-file-invoice-dollar', purchases:'fas fa-shopping-cart', purchase_detail:'fas fa-file-alt', menu:'fas fa-utensils', bulk_import:'fas fa-file-import', customers:'fas fa-user-friends', customer_ledger:'fas fa-file-invoice', pos:'fas fa-cash-register', sales:'fas fa-receipt', payments:'fas fa-money-bill-wave', expenses:'fas fa-receipt', due_reminders:'fas fa-bell', reports:'fas fa-chart-bar', settings:'fas fa-cog', account:'fas fa-user-circle', logs:'fas fa-history', about:'fas fa-info-circle' };
+  const pageLabels = { dashboard:'Dashboard', users:'Manajemen Pengguna', categories:'Kategori Menu', suppliers:'Supplier', supplier_ledger:'Kartu Hutang Supplier', purchases:'Pembelian Bahan Baku', purchase_detail:'Detail Pembelian', menu:'Menu', bulk_import:'Impor Massal Menu', customers:'Pelanggan', customer_ledger:'Kartu Piutang Pelanggan', pos:'Kasir / Pesanan Baru', sales:'Daftar Transaksi', payments:'Pembayaran', expenses:'Pengeluaran', due_reminders:'Pengingat Tagihan', reports:'Laporan', settings:'Pengaturan', printer_settings:'Pengaturan Printer', account:'Akun Saya', logs:'Log Aktivitas', about:'Tentang Aplikasi' };
+  const pageIcons = { dashboard:'fas fa-chart-line', users:'fas fa-users-cog', categories:'fas fa-th-large', suppliers:'fas fa-handshake', supplier_ledger:'fas fa-file-invoice-dollar', purchases:'fas fa-shopping-cart', purchase_detail:'fas fa-file-alt', menu:'fas fa-utensils', bulk_import:'fas fa-file-import', customers:'fas fa-user-friends', customer_ledger:'fas fa-file-invoice', pos:'fas fa-cash-register', sales:'fas fa-receipt', payments:'fas fa-money-bill-wave', expenses:'fas fa-receipt', due_reminders:'fas fa-bell', reports:'fas fa-chart-bar', settings:'fas fa-cog', printer_settings:'fas fa-print', account:'fas fa-user-circle', logs:'fas fa-history', about:'fas fa-info-circle' };
 
   return (
     <div className="app-container">
@@ -600,6 +602,7 @@ function DashboardLayout({ user, onLogout, onSwitchWarung, onUserUpdate }) {
           <ul className="sidebar-menu">
             {isAdmin && <li><button className={activeMenu==='users'?'active':''} onClick={() => navigate('users')}><i className="fas fa-users-cog"></i><span>Manajemen Pengguna</span></button></li>}
             {isAdmin && <li><button className={activeMenu==='settings'?'active':''} onClick={() => navigate('settings')}><i className="fas fa-cog"></i><span>Pengaturan</span></button></li>}
+            <li><button className={activeMenu==='printer_settings'?'active':''} onClick={() => navigate('printer_settings')}><i className="fas fa-print"></i><span>Pengaturan Printer</span></button></li>
             {isAdmin && <li><button className={activeMenu==='logs'?'active':''} onClick={() => navigate('logs')}><i className="fas fa-history"></i><span>Log Aktivitas</span></button></li>}
             <li><button className={activeMenu==='account'?'active':''} onClick={() => navigate('account')}><i className="fas fa-user-circle"></i><span>Akun Saya</span></button></li>
             <li><button className={activeMenu==='about'?'active':''} onClick={() => navigate('about')}><i className="fas fa-info-circle"></i><span>Tentang Aplikasi</span></button></li>
@@ -2489,17 +2492,146 @@ function CustPaymentModal({ customer, userId, role, onClose, onSaved }) {
 }
 
 /* ── Struk Thermal ── */
+/* ── Printer Thermal: koneksi langsung via Bluetooth (BLE) / USB ─── */
+const PRINTER_BLE_SERVICES = ['000018f0-0000-1000-8000-00805f9b34fb', '0000ff00-0000-1000-8000-00805f9b34fb', '49535343-fe7d-4ae5-8fa9-9fafd205e455', '0000ffe0-0000-1000-8000-00805f9b34fb'];
+let _btDevice = null, _btChar = null, _usbDevice = null, _usbEndpoint = null;
+
+function printerSupport() {
+  return { ble: !!(navigator.bluetooth), usb: !!(navigator.usb) };
+}
+function getConnectedPrinterInfo() {
+  if (_btChar) return { type: 'bluetooth', name: localStorage.getItem('printer_bt_name') || 'Printer Bluetooth' };
+  if (_usbDevice) return { type: 'usb', name: localStorage.getItem('printer_usb_name') || 'Printer USB' };
+  return null;
+}
+async function connectBluetoothPrinter() {
+  if (!navigator.bluetooth) return { success: false, message: 'Browser ini tidak mendukung Web Bluetooth. Pakai Chrome/Edge di Android atau Desktop.' };
+  try {
+    const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: PRINTER_BLE_SERVICES });
+    const server = await device.gatt.connect();
+    let char = null;
+    for (const sId of PRINTER_BLE_SERVICES) {
+      try {
+        const service = await server.getPrimaryService(sId);
+        const chars = await service.getCharacteristics();
+        char = chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
+        if (char) break;
+      } catch (e) { /* servis ini tidak ada di printer ini, coba servis berikutnya */ }
+    }
+    if (!char) { device.gatt.disconnect(); return { success: false, message: 'Printer ditemukan tapi servis cetaknya tidak dikenali. Printer ini kemungkinan pakai Bluetooth Classic (bukan BLE) — coba app RawBT sebagai gantinya.' }; }
+    _btDevice = device; _btChar = char;
+    localStorage.setItem('printer_bt_name', device.name || 'Printer Bluetooth');
+    device.addEventListener('gattserverdisconnected', () => { _btDevice = null; _btChar = null; });
+    return { success: true, name: device.name || 'Printer Bluetooth' };
+  } catch (e) {
+    if (e.name === 'NotFoundError') return { success: false, message: 'Dibatalkan atau tidak ada printer dipilih.' };
+    return { success: false, message: 'Gagal terhubung: ' + e.message };
+  }
+}
+async function connectUsbPrinter() {
+  if (!navigator.usb) return { success: false, message: 'Browser ini tidak mendukung Web USB. Pakai Chrome/Edge di Desktop atau Android.' };
+  try {
+    const device = await navigator.usb.requestDevice({ filters: [] });
+    await device.open();
+    if (device.configuration === null) await device.selectConfiguration(1);
+    const iface = device.configuration.interfaces[0];
+    await device.claimInterface(iface.interfaceNumber);
+    const ep = iface.alternate.endpoints.find(e => e.direction === 'out');
+    if (!ep) return { success: false, message: 'Endpoint USB untuk kirim data tidak ditemukan di printer ini.' };
+    _usbDevice = device; _usbEndpoint = ep.endpointNumber;
+    localStorage.setItem('printer_usb_name', device.productName || 'Printer USB');
+    return { success: true, name: device.productName || 'Printer USB' };
+  } catch (e) {
+    if (e.name === 'NotFoundError') return { success: false, message: 'Dibatalkan atau tidak ada printer dipilih.' };
+    return { success: false, message: 'Gagal terhubung: ' + e.message };
+  }
+}
+function disconnectPrinter() {
+  try { if (_btDevice?.gatt?.connected) _btDevice.gatt.disconnect(); } catch (e) {}
+  try { if (_usbDevice) _usbDevice.close(); } catch (e) {}
+  _btDevice = null; _btChar = null; _usbDevice = null; _usbEndpoint = null;
+  localStorage.removeItem('printer_bt_name'); localStorage.removeItem('printer_usb_name');
+}
+
+// ── Mesin ESC/POS: ubah data struk jadi perintah mentah buat printer thermal ──
+function _escposPad(left, right, width) {
+  left = String(left); right = String(right);
+  const space = width - left.length - right.length;
+  if (space < 1) return left.substring(0, Math.max(0, width - right.length - 1)) + ' ' + right;
+  return left + ' '.repeat(space) + right;
+}
+function buildEscposReceipt(d, width) {
+  width = width || 32;
+  const ESC = '\x1B', GS = '\x1D';
+  let out = ESC + '@'; // reset printer
+  out += ESC + 'a' + '\x01'; // rata tengah
+  if (_appSettings.business_logo) { /* gambar logo di ESC/POS butuh proses raster terpisah — dilewati di sini, teks tetap lengkap */ }
+  out += ESC + 'E' + '\x01' + BN() + '\n' + ESC + 'E' + '\x00';
+  out += 'STRUK PENJUALAN\n';
+  out += ESC + 'a' + '\x00'; // rata kiri
+  out += '-'.repeat(width) + '\n';
+  out += (d.invoice_no || '') + '\n';
+  out += (d.date ? fmtDate(d.date) : '') + '\n';
+  out += (ORDER_TYPE_LABELS[d.orderType] || 'Makan di Tempat') + (d.tableNo ? ' - Meja ' + d.tableNo : '') + '\n';
+  out += 'Pelanggan: ' + (d.customer || 'Umum') + '\n';
+  out += 'Kasir: ' + (d.cashier || '-') + '\n';
+  out += '-'.repeat(width) + '\n';
+  (d.items || []).forEach((item, i) => {
+    out += (i+1) + '. ' + item.name + '\n';
+    out += _escposPad('  ' + (item.qty||1) + ' x ' + fmtRp(item.price||0), fmtRp(item.line_total || item.total || 0), width) + '\n';
+    if (item.notes) out += '  (' + item.notes + ')\n';
+  });
+  out += '-'.repeat(width) + '\n';
+  out += _escposPad('Subtotal', fmtRp(d.subtotal||0), width) + '\n';
+  if ((d.discount||0) > 0) out += _escposPad('Diskon', '-' + fmtRp(d.discount||0), width) + '\n';
+  out += ESC + 'E' + '\x01' + _escposPad('TOTAL', fmtRp(d.grandTotal||0), width) + '\n' + ESC + 'E' + '\x00';
+  out += _escposPad('Dibayar', fmtRp(d.paid||0), width) + '\n';
+  if ((d.kembalian||0) > 0) out += _escposPad('Kembalian', fmtRp(d.kembalian||0), width) + '\n';
+  if ((d.due||0) > 0) out += _escposPad('Kurang Bayar', fmtRp(d.due||0), width) + '\n';
+  out += _escposPad('Metode', d.payMethod || 'tunai', width) + '\n';
+  if (d.payRef) out += _escposPad('Ref', d.payRef, width) + '\n';
+  out += '-'.repeat(width) + '\n';
+  out += ESC + 'a' + '\x01';
+  out += (_appSettings.invoice_footer || 'Terima kasih atas kunjungan Anda!') + '\n\n\n';
+  out += GS + 'V' + '\x42' + '\x00';
+  const bytes = new Uint8Array(out.length);
+  for (let i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i) & 0xFF;
+  return bytes;
+}
+async function printViaConnectedPrinter(receiptData, width) {
+  const bytes = buildEscposReceipt(receiptData, width);
+  try {
+    if (_btChar) {
+      const chunkSize = 180;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.slice(i, i + chunkSize);
+        if (_btChar.properties.writeWithoutResponse) await _btChar.writeValueWithoutResponse(chunk);
+        else await _btChar.writeValue(chunk);
+        await new Promise(r => setTimeout(r, 30));
+      }
+      return { success: true };
+    }
+    if (_usbDevice) { await _usbDevice.transferOut(_usbEndpoint, bytes); return { success: true }; }
+    return { success: false, message: 'Belum ada printer terhubung. Buka Pengaturan Printer dulu.' };
+  } catch (e) { return { success: false, message: 'Gagal mengirim ke printer: ' + e.message }; }
+}
+
 function ThermalSlip({ data, slipRef }) {
   const d = data || {};
   return (
     <div ref={slipRef} className="thermal-slip">
-      <div className="ts-header"><div className="ts-biz">{BN()}</div><div className="ts-subtitle">STRUK PENJUALAN</div></div>
+      <div className="ts-header">
+        {_appSettings.business_logo && <img src={avatarUrl(_appSettings.business_logo)} className="ts-logo" alt="" />}
+        <div className="ts-biz">{BN()}</div>
+        <div className="ts-subtitle">STRUK PENJUALAN</div>
+      </div>
       <div className="ts-div"></div>
       <div className="ts-info">
         <div><strong>{d.invoice_no || ''}</strong></div>
         <div>{d.date ? fmtDate(d.date) : ''}</div>
         <div>{ORDER_TYPE_LABELS[d.orderType] || 'Makan di Tempat'}{d.tableNo ? ' — Meja ' + d.tableNo : ''}</div>
         <div>Pelanggan: <strong>{d.customer || 'Umum'}</strong></div>
+        <div>Kasir: <strong>{d.cashier || '-'}</strong></div>
       </div>
       <div className="ts-div"></div>
       <div className="ts-items">
@@ -2527,17 +2659,44 @@ function ThermalSlip({ data, slipRef }) {
   );
 }
 function printThermalSlip(ref) {
-  if (!ref?.current) return;
-  const w = window.open('', '', 'width=350,height=600');
-  w.document.write('<html><head><title>Struk</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Courier New",monospace;font-size:12px;padding:8px;width:80mm;color:#333}.ts-header{text-align:center}.ts-biz{font-size:14px;font-weight:700}.ts-subtitle{font-size:10px;color:#888;letter-spacing:1px}.ts-div{border-top:1px dashed #bbb;margin:6px 0}.ts-info{font-size:11px;color:#555}.ts-info div{margin-bottom:2px}.ts-item{margin-bottom:6px;padding-bottom:4px;border-bottom:1px dotted #ddd}.ts-item:last-child{border-bottom:none}.ts-item-head{display:flex;justify-content:space-between;font-weight:700}.ts-item-sub{font-size:10px;color:#888}.ts-row{display:flex;justify-content:space-between;padding:2px 0}.ts-row.grand{font-weight:700;font-size:14px;border-top:1px dashed #333;border-bottom:1px dashed #333;padding:4px 0;margin:4px 0}.ts-row.due-row{color:#c62828;font-weight:700}.ts-row.paid-row{color:#2e7d32}.ts-footer{text-align:center;font-size:10px;color:#aaa}</style></head><body>');
-  w.document.write(ref.current.innerHTML);
-  w.document.write('</body></html>');
-  w.document.close();
-  setTimeout(() => { w.print(); w.close(); }, 300);
+  if (!ref?.current) { Swal.fire({ icon:'error', text:'Struk belum siap, coba lagi sebentar.' }); return; }
+  const styleTag = '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Courier New",monospace;font-size:12px;padding:8px;width:80mm;color:#333}.ts-header{text-align:center}.ts-logo{max-width:50px;max-height:50px;object-fit:contain;display:block;margin:0 auto 6px}.ts-biz{font-size:14px;font-weight:700}.ts-subtitle{font-size:10px;color:#888;letter-spacing:1px}.ts-div{border-top:1px dashed #bbb;margin:6px 0}.ts-info{font-size:11px;color:#555}.ts-info div{margin-bottom:2px}.ts-item{margin-bottom:6px;padding-bottom:4px;border-bottom:1px dotted #ddd}.ts-item:last-child{border-bottom:none}.ts-item-head{display:flex;justify-content:space-between;font-weight:700}.ts-item-sub{font-size:10px;color:#888}.ts-row{display:flex;justify-content:space-between;padding:2px 0}.ts-row.grand{font-weight:700;font-size:14px;border-top:1px dashed #333;border-bottom:1px dashed #333;padding:4px 0;margin:4px 0}.ts-row.due-row{color:#c62828;font-weight:700}.ts-row.paid-row{color:#2e7d32}.ts-footer{text-align:center;font-size:10px;color:#aaa}</style>';
+
+
+  const old = document.getElementById('rs-print-frame');
+  if (old) old.remove();
+  const iframe = document.createElement('iframe');
+  iframe.id = 'rs-print-frame';
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentWindow.document;
+  doc.open();
+  doc.write('<html><head><title>Struk</title>' + styleTag + '</head><body>' + ref.current.innerHTML + '</body></html>');
+  doc.close();
+
+  setTimeout(() => {
+    try {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } catch (e) {
+      console.error('Cetak gagal:', e);
+      Swal.fire({ icon:'error', text:'Gagal membuka dialog cetak. Coba unduh struk sebagai gambar sebagai alternatif.' });
+    }
+    setTimeout(() => { const f = document.getElementById('rs-print-frame'); if (f) f.remove(); }, 1500);
+  }, 300);
 }
 function downloadSlip(ref, name) {
-  if (!ref?.current || typeof html2canvas === 'undefined') return;
-  html2canvas(ref.current, { scale: 3, backgroundColor: '#ffffff', useCORS: true }).then(canvas => { const link = document.createElement('a'); link.download = (name || 'struk') + '-' + Date.now() + '.png'; link.href = canvas.toDataURL('image/png'); link.click(); });
+  if (!ref?.current) { Swal.fire({ icon:'error', text:'Struk belum siap, coba lagi sebentar.' }); return; }
+  if (typeof html2canvas === 'undefined') { Swal.fire({ icon:'error', text:'Fitur unduh gambar belum siap dimuat. Periksa koneksi internet lalu coba lagi.' }); return; }
+  html2canvas(ref.current, { scale: 3, backgroundColor: '#ffffff', useCORS: true })
+    .then(canvas => { const link = document.createElement('a'); link.download = (name || 'struk') + '-' + Date.now() + '.png'; link.href = canvas.toDataURL('image/png'); link.click(); })
+    .catch(e => { console.error('downloadSlip:', e); Swal.fire({ icon:'error', text:'Gagal membuat gambar struk. Coba lagi.' }); });
 }
 
 /* ── POS / Kasir ── */
@@ -2638,10 +2797,12 @@ function POSView({ user }) {
   const selectedCust = customers.find(c => c.id == customerId);
   const canHutang = !!(selectedCust && String(selectedCust.phone || '').trim());
 
+
   useEffect(() => {
     if (payMethod === 'tunai' || payMethod === 'hutang') setPaidAmt('');
     else setPaidAmt(String(grandTotal));
   }, [payMethod]);
+
 
   useEffect(() => {
     if (payMethod === 'hutang' && !canHutang) setPayMethod('tunai');
@@ -2657,7 +2818,7 @@ function POSView({ user }) {
       const r = await API.completeSale({ customer_id: customerId || '', items: cart, discount: disc, paid_amount: paidCapped, payment_method: payMethod, payment_reference: payRef, notes, status: 'completed', order_type: orderType, table_no: tableNo }, user.id, user.role);
       setLoad('');
       if (r.success) {
-        setShowInvoice({ invoice_no: r.data.invoice_no, customer: customers.find(c => c.id == customerId)?.name || 'Pelanggan Umum', orderType, tableNo, items: cart, subtotal, discount: disc, grandTotal, paid, kembalian, due, payMethod, payRef, notes, date: new Date().toISOString() });
+        setShowInvoice({ invoice_no: r.data.invoice_no, customer: customers.find(c => c.id == customerId)?.name || 'Pelanggan Umum', cashier: user.full_name, orderType, tableNo, items: cart, subtotal, discount: disc, grandTotal, paid, kembalian, due, payMethod, payRef, notes, date: new Date().toISOString() });
         setCart([]); setDiscount('0'); setPaidAmt(''); setPayRef(''); setNotes(''); setCustomerId(''); setTableNo(''); setMobileCartOpen(false);
         const k = 'pos_menu_' + (filterCat || 0);
         API.getAvailableMenu(filterCat ? parseInt(filterCat) : 0).then(am => { if (am.success) { setAllMenu(am.data); swrSet(k, am.data); } });
@@ -2817,7 +2978,7 @@ function POSView({ user }) {
           {cart.length > 0 && (
             <div>
               <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', cursor:'pointer', borderTop:'1px solid #e0e0e0', marginTop:'12px', color:'var(--navy-primary)', fontWeight:'600', fontSize:'13px'}} onClick={() => setSlipOpen(!slipOpen)}><span><i className="fas fa-receipt"></i> Pratinjau Struk</span><i className={'fas fa-chevron-' + (slipOpen ? 'up' : 'down')}></i></div>
-              {slipOpen && (<div><ThermalSlip slipRef={slipRef} data={{ invoice_no: '(Transaksi Baru)', date: new Date().toISOString(), customer: customers.find(c => c.id == customerId)?.name || 'Pelanggan Umum', orderType, tableNo, items: cart, subtotal, discount: disc, grandTotal, paid, kembalian, due: due > 0 ? due : 0, payMethod, payRef, notes }} /><div className="ts-actions"><button className="ts-btn-print" onClick={() => printThermalSlip(slipRef)}><i className="fas fa-print"></i> Cetak</button><button className="ts-btn-dl" onClick={() => downloadSlip(slipRef, 'struk')}><i className="fas fa-download"></i> Simpan Gambar</button></div></div>)}
+              {slipOpen && (<div><ThermalSlip slipRef={slipRef} data={{ invoice_no: '(Transaksi Baru)', date: new Date().toISOString(), customer: customers.find(c => c.id == customerId)?.name || 'Pelanggan Umum', cashier: user.full_name, orderType, tableNo, items: cart, subtotal, discount: disc, grandTotal, paid, kembalian, due: due > 0 ? due : 0, payMethod, payRef, notes }} /><div className="ts-actions"><button className="ts-btn-print" onClick={() => printThermalSlip(slipRef)}><i className="fas fa-print"></i> Cetak</button><button className="ts-btn-dl" onClick={() => downloadSlip(slipRef, 'struk')}><i className="fas fa-download"></i> Simpan Gambar</button></div></div>)}
             </div>
           )}
         </div>
@@ -2945,7 +3106,7 @@ function SalesListView({ user, onNavigate }) {
   const handleEditSaved = () => { setEditingSale(null); loadSales(); };
   const handlePrint = async (sale) => {
     setLoad('Memuat struk...');
-    try { const r = await API.getSaleDetail(sale.id, user.id, user.role); setLoad(''); if (r.success) { const d = r.data; setPrintSale({ invoice_no: d.invoice_no, customer: d.customer_name, orderType: d.order_type, tableNo: d.table_no, items: d.items, subtotal: d.subtotal, discount: d.discount, grandTotal: d.grand_total, paid: d.paid_amount, due: d.due_amount, payMethod: d.payment_method, notes: d.notes, date: d.sale_date }); } } catch(e) { setLoad(''); }
+    try { const r = await API.getSaleDetail(sale.id, user.id, user.role); setLoad(''); if (r.success) { const d = r.data; setPrintSale({ invoice_no: d.invoice_no, customer: d.customer_name, cashier: d.cashier_name, orderType: d.order_type, tableNo: d.table_no, items: d.items, subtotal: d.subtotal, discount: d.discount, grandTotal: d.grand_total, paid: d.paid_amount, due: d.due_amount, payMethod: d.payment_method, notes: d.notes, date: d.sale_date }); } } catch(e) { setLoad(''); }
   };
   const handlePaySaved = () => { setPaySale(null); loadSales(); };
 
@@ -3653,6 +3814,77 @@ function ReportsView({ user }) {
 }
 
 /* ── Tentang Aplikasi ── */
+/* ── Pengaturan Printer ── */
+function PrinterSettingsView() {
+  const [connected, setConnected] = useState(getConnectedPrinterInfo());
+  const [connecting, setConnecting] = useState('');
+  const [width, setWidth] = useState(() => localStorage.getItem('printer_width') || '32');
+  const support = printerSupport();
+
+  const handleConnect = async (type) => {
+    setConnecting(type);
+    const r = type === 'bluetooth' ? await connectBluetoothPrinter() : await connectUsbPrinter();
+    setConnecting('');
+    if (r.success) { setConnected(getConnectedPrinterInfo()); Swal.fire({ icon:'success', text:'Terhubung ke ' + r.name, timer:1800, showConfirmButton:false }); }
+    else Swal.fire({ icon:'error', text:r.message });
+  };
+  const handleDisconnect = () => { disconnectPrinter(); setConnected(null); };
+  const handleTestPrint = async () => {
+    const r = await printViaConnectedPrinter({ invoice_no:'TEST-001', date:new Date().toISOString(), customer:'Pelanggan Umum', cashier:'Admin', orderType:'dine_in', items:[{ name:'Contoh Menu', qty:1, price:10000, line_total:10000 }], subtotal:10000, discount:0, grandTotal:10000, paid:10000, kembalian:0, due:0, payMethod:'tunai' }, parseInt(width));
+    if (r.success) Swal.fire({ icon:'success', text:'Perintah cetak terkirim. Cek printer fisiknya.', timer:2000, showConfirmButton:false });
+    else Swal.fire({ icon:'error', text:r.message });
+  };
+  const changeWidth = (w) => { setWidth(w); localStorage.setItem('printer_width', w); };
+
+  return (
+    <div className="data-section">
+      <div className="section-header"><h2><i className="fas fa-print"></i> Pengaturan Printer</h2></div>
+
+      <div className="printer-info-box">
+        <i className="fas fa-info-circle"></i>
+        <div>
+          <strong>Sebelum mulai, penting untuk tahu batasannya:</strong>
+          <p>Cuma printer <strong>Bluetooth Low Energy (BLE)</strong> atau <strong>USB</strong> yang bisa terhubung langsung di sini — ini batasan browser, bukan aplikasi ini. Printer thermal <strong>Bluetooth Classic/SPP</strong> (kebanyakan printer murah di marketplace) <strong>tidak bisa</strong> dihubungkan lewat cara ini — gunakan tombol "Cetak (Dialog Browser)" di struk seperti biasa, atau app RawBT. Fitur ini juga <strong>tidak berfungsi di iPhone/iPad (Safari)</strong> sama sekali — hanya Chrome/Edge di Android atau Desktop.</p>
+        </div>
+      </div>
+
+      {connected ? (
+        <div className="printer-connected-card">
+          <div className="printer-connected-ico"><i className={'fas ' + (connected.type === 'bluetooth' ? 'fa-bluetooth-b' : 'fa-usb')}></i></div>
+          <div style={{flex:1}}>
+            <div className="printer-connected-name">{connected.name}</div>
+            <div className="printer-connected-meta">Terhubung via {connected.type === 'bluetooth' ? 'Bluetooth' : 'USB'}</div>
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={handleDisconnect}><i className="fas fa-unlink"></i> Putuskan</button>
+        </div>
+      ) : (
+        <div className="printer-connect-grid">
+          <button className="printer-connect-btn" disabled={!support.ble || !!connecting} onClick={() => handleConnect('bluetooth')}>
+            <i className="fas fa-bluetooth-b"></i>
+            <div>{connecting === 'bluetooth' ? 'Menghubungkan...' : 'Hubungkan via Bluetooth'}</div>
+            {!support.ble && <small>Tidak didukung browser ini</small>}
+          </button>
+          <button className="printer-connect-btn" disabled={!support.usb || !!connecting} onClick={() => handleConnect('usb')}>
+            <i className="fas fa-usb"></i>
+            <div>{connecting === 'usb' ? 'Menghubungkan...' : 'Hubungkan via USB'}</div>
+            {!support.usb && <small>Tidak didukung browser ini</small>}
+          </button>
+        </div>
+      )}
+
+      <div className="pos-pane" style={{marginTop:'20px'}}>
+        <div className="pos-pane-title"><i className="fas fa-ruler-horizontal"></i> Lebar Kertas</div>
+        <div style={{display:'flex', gap:'10px'}}>
+          <button className={'pos-chip' + (width==='32'?' active':'')} onClick={() => changeWidth('32')}>58mm (32 karakter)</button>
+          <button className={'pos-chip' + (width==='48'?' active':'')} onClick={() => changeWidth('48')}>80mm (48 karakter)</button>
+        </div>
+      </div>
+
+      {connected && <button className="btn btn-primary" style={{marginTop:'16px'}} onClick={handleTestPrint}><i className="fas fa-vial"></i> Tes Cetak</button>}
+    </div>
+  );
+}
+
 function AboutView() {
   return (
     <div className="about-section">
@@ -3661,7 +3893,7 @@ function AboutView() {
         <div className="about-title"><h1><i className="fas fa-utensils"></i> {BN()}</h1><p className="about-dev">Dikembangkan oleh <strong>Ahmad Galih Saputro</strong> (Tanpa Sorotan)</p></div>
       </div>
       <div className="about-card">
-        <h2><i className="fas fa-question-circle"></i> Apa itu Aplikasi Ini?</h2>
+        <h2><i className="fas fa-question-circle"></i>Aplikasi Apa Ini?</h2>
         <p>Ini adalah sistem Point of Sale (POS) yang dibuat khusus untuk restoran dan rumah makan. Digunakan untuk mengelola menu, mencatat transaksi, memantau stok, dan menjaga semuanya tetap rapi dalam satu tempat. Anggap saja ini seperti mesin kasir digital yang bisa Anda akses dari mana saja untuk menjalankan seluruh operasional restoran Anda.</p>
       </div>
       <div className="about-card">
@@ -3718,7 +3950,7 @@ function AboutView() {
           </div>
         </div>
       </div>
-      <div className="about-footer"><p>Kredit untuk Rameez Scripts</p><p className="about-version">Versi 1.0.0 — Edisi Restoran</p></div>
+      <div className="about-footer"><p>Kredit untuk Tanpa Sorotan</p><p className="about-version">Versi 1.0.0 — Edisi Restoran</p></div>
     </div>
   );
 }
