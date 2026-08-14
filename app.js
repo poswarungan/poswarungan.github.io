@@ -3861,12 +3861,12 @@ function PrinterSettingsView() {
       ) : (
         <div className="printer-connect-grid">
           <button className="printer-connect-btn" disabled={!support.ble || !!connecting} onClick={() => handleConnect('bluetooth')}>
-            <i className="fas fa-bluetooth-b"></i>
+            <i className="fab fa-bluetooth-b"></i>
             <div>{connecting === 'bluetooth' ? 'Menghubungkan...' : 'Hubungkan via Bluetooth'}</div>
             {!support.ble && <small>Tidak didukung browser ini</small>}
           </button>
           <button className="printer-connect-btn" disabled={!support.usb || !!connecting} onClick={() => handleConnect('usb')}>
-            <i className="fas fa-usb"></i>
+            <i className="fab fa-usb"></i>
             <div>{connecting === 'usb' ? 'Menghubungkan...' : 'Hubungkan via USB'}</div>
             {!support.usb && <small>Tidak didukung browser ini</small>}
           </button>
