@@ -889,3 +889,361 @@ table.dataTable tbody tr:hover { background: #f9f9f9 !important; }
   .bnav-fab:active { transform: scale(0.92); }
   .main-content { padding-bottom: 70px !important; }
 }
+
+/* =========================================================
+  PRINTER SETTINGS
+  Responsive: Desktop / Tablet / Mobile
+   ========================================================= */
+
+.printer-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px;
+  margin-bottom: 20px;
+  background: #f5f9ff;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  color: #374151;
+}
+.printer-info-box > i {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--navy-primary);
+  color: #fff;
+  font-size: 16px;
+}
+.printer-info-box > div {
+  flex: 1;
+  min-width: 0;
+}
+.printer-info-box strong {
+  color: #1f2937;
+}
+.printer-info-box p {
+  margin: 7px 0 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #5f6b7a;
+}
+
+/* =========================================================
+  CONNECT PRINTER GRID
+   ========================================================= */
+
+.printer-connect-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* =========================================================
+  CONNECT BUTTON
+   ========================================================= */
+
+.printer-connect-btn {
+  width: 100%;
+  min-height: 116px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: #fff;
+  border: 1px solid #e1e5ea;
+  border-radius: 16px;
+  color: #252b33;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease,
+    border-color .18s ease,
+    background .18s ease;
+}
+.printer-connect-btn > i {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: #eef5ff;
+  color: var(--navy-primary);
+  font-size: 22px;
+}
+.printer-connect-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--navy-primary);
+  box-shadow: 0 7px 20px rgba(20, 99, 246, .12);
+}
+.printer-connect-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+.printer-connect-btn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  transform: none;
+}
+.printer-connect-btn small {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+/* =========================================================
+  CONNECTED PRINTER CARD
+   ========================================================= */
+
+.printer-connected-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 16px;
+}
+.printer-connected-ico {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 21px;
+}
+.printer-connected-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #166534;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.printer-connected-meta {
+  margin-top: 3px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* =========================================================
+  PRINTER SETTINGS / PAPER WIDTH
+   ========================================================= */
+
+.printer-settings-paper {
+  width: 100%;
+}
+.printer-settings-paper .pos-chip {
+  flex: 1;
+  min-width: 0;
+}
+/* Jika bagian paper width menggunakan inline display:flex */
+.printer-settings-paper > div {
+  width: 100%;
+}
+
+
+/* =========================================================
+  TEST PRINT / ACTION AREA
+   ========================================================= */
+
+.printer-connected-card + .pos-pane {
+  margin-top: 20px !important;
+}
+.printer-connect-grid + .pos-pane {
+  margin-top: 20px !important;
+}
+
+/* =========================================================
+  TABLET
+  561px - 1024px
+   ========================================================= */
+
+@media (min-width: 561px) and (max-width: 1024px) {
+
+  .printer-info-box {
+    padding: 18px;
+    gap: 15px;
+    border-radius: 17px;
+  }
+  .printer-info-box > i {
+    width: 42px;
+    height: 42px;
+    font-size: 17px;
+  }
+  .printer-info-box p {
+    font-size: 13px;
+    line-height: 1.65;
+  }
+  .printer-connect-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .printer-connect-btn {
+    min-height: 125px;
+    padding: 22px 18px;
+    border-radius: 17px;
+  }
+  .printer-connect-btn > i {
+    width: 52px;
+    height: 52px;
+    border-radius: 15px;
+    font-size: 23px;
+  }
+  .printer-connect-btn {
+    font-size: 15px;
+  }
+  .printer-connect-btn small {
+    font-size: 12px;
+  }
+  .printer-connected-card {
+    padding: 18px;
+  }
+  .printer-connected-ico {
+    width: 52px;
+    height: 52px;
+    border-radius: 15px;
+  }
+  .printer-connected-name {
+    font-size: 16px;
+  }
+  .printer-connected-meta {
+    font-size: 13px;
+  }
+}
+
+/* =========================================================
+  MOBILE
+  <= 560px
+   ========================================================= */
+
+@media (max-width: 560px) {
+  .printer-info-box {
+    gap: 12px;
+    padding: 15px;
+    margin-bottom: 16px;
+    border-radius: 15px;
+  }
+  .printer-info-box > i {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+  }
+  .printer-info-box p {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  /* Bluetooth & USB menjadi vertikal */
+  .printer-connect-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  /* Button mobile dibuat horizontal */
+  .printer-connect-btn {
+    min-height: 88px;
+    padding: 14px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 13px;
+    border-radius: 15px;
+    text-align: left;
+  }
+  .printer-connect-btn > i {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    font-size: 20px;
+  }
+  .printer-connect-btn > div {
+    flex: 1;
+    min-width: 0;
+  }
+  .printer-connect-btn small {
+    margin-top: 2px;
+    font-size: 10px;
+  }
+  /* Connected printer */
+  .printer-connected-card {
+    padding: 14px;
+    gap: 11px;
+    border-radius: 15px;
+  }
+  .printer-connected-ico {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 19px;
+  }
+  .printer-connected-name {
+    font-size: 14px;
+  }
+  .printer-connected-meta {
+    font-size: 11px;
+  }
+  /* Paper width */
+  .printer-settings-paper .pos-chip {
+    min-height: 44px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+/* =========================================================
+  VERY SMALL PHONE
+  <= 360px
+   ========================================================= */
+
+@media (max-width: 360px) {
+  .printer-info-box {
+    padding: 13px;
+  }
+  .printer-connect-btn {
+    min-height: 82px;
+    padding: 12px;
+  }
+  .printer-connect-btn > i {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+  .printer-connect-btn {
+    font-size: 13px;
+  }
+  .printer-connect-btn small {
+    font-size: 9px;
+  }
+  .printer-settings-paper .pos-chip {
+    font-size: 12px;
+  }
+}
+
+/* =========================================================
+  LANDSCAPE TABLET / SMALL DESKTOP
+   ========================================================= */
+
+@media (min-width: 561px) and (max-width: 1024px) and (orientation: landscape) {
+  .printer-connect-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .printer-connect-btn {
+    min-height: 110px;
+  }
+}
