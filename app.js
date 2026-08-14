@@ -646,6 +646,7 @@ function MainContent({ activeMenu, user, onUserUpdate, onSettingsUpdate, openLed
     case 'expenses': return <ExpensesView user={user} />;
     case 'bulk_import': return <BulkImportPageView user={user} />;
     case 'settings': return <SettingsView user={user} onSettingsUpdate={onSettingsUpdate} />;
+    case 'printer_settings': return <PrinterSettingsView user={user} />;
     case 'account': return <AccountView user={user} onUserUpdate={onUserUpdate} />;
     case 'due_reminders': return <DueRemindersView user={user} />;
     case 'reports': return <ReportsView user={user} />;
