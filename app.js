@@ -2659,14 +2659,193 @@ function ThermalSlip({ data, slipRef }) {
     </div>
   );
 }
-function printThermalSlip(ref) {
-  if (!ref?.current) { Swal.fire({ icon:'error', text:'Struk belum siap, coba lagi sebentar.' }); return; }
-  const styleTag = '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Courier New",monospace;font-size:12px;padding:8px;width:80mm;color:#333}.ts-header{text-align:center}.ts-logo{max-width:50px;max-height:50px;object-fit:contain;display:block;margin:0 auto 6px}.ts-biz{font-size:14px;font-weight:700}.ts-subtitle{font-size:10px;color:#888;letter-spacing:1px}.ts-div{border-top:1px dashed #bbb;margin:6px 0}.ts-info{font-size:11px;color:#555}.ts-info div{margin-bottom:2px}.ts-item{margin-bottom:6px;padding-bottom:4px;border-bottom:1px dotted #ddd}.ts-item:last-child{border-bottom:none}.ts-item-head{display:flex;justify-content:space-between;font-weight:700}.ts-item-sub{font-size:10px;color:#888}.ts-row{display:flex;justify-content:space-between;padding:2px 0}.ts-row.grand{font-weight:700;font-size:14px;border-top:1px dashed #333;border-bottom:1px dashed #333;padding:4px 0;margin:4px 0}.ts-row.due-row{color:#c62828;font-weight:700}.ts-row.paid-row{color:#2e7d32}.ts-footer{text-align:center;font-size:10px;color:#aaa}</style>';
+async function printThermalSlip(ref, receiptData) {
+  if (!ref?.current) {
+    Swal.fire({
+      icon: 'error',
+      text: 'Struk belum siap, coba lagi sebentar.'
+    });
+    return;
+  }
 
+  // =========================================================
+  // PRIORITAS 1:
+  // Jika printer BLE / USB sudah terhubung,
+  // kirim langsung menggunakan ESC/POS.
+  // =========================================================
+
+  const connectedPrinter = getConnectedPrinterInfo();
+
+  if (connectedPrinter) {
+    const width = parseInt(
+      localStorage.getItem('printer_width') || '32',
+      10
+    );
+
+    if (!receiptData) {
+      Swal.fire({
+        icon: 'error',
+        text: 'Data struk tidak tersedia.'
+      });
+      return;
+    }
+
+    Swal.fire({
+      icon: 'info',
+      text: 'Mengirim struk ke printer...',
+      timer: 1200,
+      showConfirmButton: false
+    });
+
+    try {
+      const result = await printViaConnectedPrinter(
+        receiptData,
+        width
+      );
+
+      if (result.success) {
+        Swal.fire({
+          icon: 'success',
+          text: 'Struk berhasil dikirim ke printer.',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          text: result.message || 'Gagal mencetak ke printer.'
+        });
+      }
+
+    } catch (e) {
+      console.error('Direct thermal print:', e);
+
+      Swal.fire({
+        icon: 'error',
+        text: 'Gagal mencetak ke printer: ' + e.message
+      });
+    }
+
+    return;
+  }
+
+  // =========================================================
+  // PRIORITAS 2:
+  // Tidak ada printer direct yang terhubung.
+  // Gunakan print dialog browser seperti sebelumnya.
+  // =========================================================
+
+  const styleTag = `
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        padding: 8px;
+        width: 80mm;
+        color: #333;
+      }
+
+      .ts-header {
+        text-align: center;
+      }
+
+      .ts-logo {
+        max-width: 50px;
+        max-height: 50px;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto 6px;
+      }
+
+      .ts-biz {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .ts-subtitle {
+        font-size: 10px;
+        color: #888;
+        letter-spacing: 1px;
+      }
+
+      .ts-div {
+        border-top: 1px dashed #bbb;
+        margin: 6px 0;
+      }
+
+      .ts-info {
+        font-size: 11px;
+        color: #555;
+      }
+
+      .ts-info div {
+        margin-bottom: 2px;
+      }
+
+      .ts-item {
+        margin-bottom: 6px;
+        padding-bottom: 4px;
+        border-bottom: 1px dotted #ddd;
+      }
+
+      .ts-item:last-child {
+        border-bottom: none;
+      }
+
+      .ts-item-head {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+      }
+
+      .ts-item-sub {
+        font-size: 10px;
+        color: #888;
+      }
+
+      .ts-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 2px 0;
+      }
+
+      .ts-row.grand {
+        font-weight: 700;
+        font-size: 14px;
+        border-top: 1px dashed #333;
+        border-bottom: 1px dashed #333;
+        padding: 4px 0;
+        margin: 4px 0;
+      }
+
+      .ts-row.due-row {
+        color: #c62828;
+        font-weight: 700;
+      }
+
+      .ts-row.paid-row {
+        color: #2e7d32;
+      }
+
+      .ts-footer {
+        text-align: center;
+        font-size: 10px;
+        color: #aaa;
+      }
+    </style>
+  `;
 
   const old = document.getElementById('rs-print-frame');
   if (old) old.remove();
+
   const iframe = document.createElement('iframe');
+
   iframe.id = 'rs-print-frame';
   iframe.style.position = 'fixed';
   iframe.style.right = '0';
@@ -2674,11 +2853,21 @@ function printThermalSlip(ref) {
   iframe.style.width = '0';
   iframe.style.height = '0';
   iframe.style.border = '0';
+
   document.body.appendChild(iframe);
 
   const doc = iframe.contentWindow.document;
+
   doc.open();
-  doc.write('<html><head><title>Struk</title>' + styleTag + '</head><body>' + ref.current.innerHTML + '</body></html>');
+
+  doc.write(
+    '<html><head><title>Struk</title>' +
+    styleTag +
+    '</head><body>' +
+    ref.current.innerHTML +
+    '</body></html>'
+  );
+
   doc.close();
 
   setTimeout(() => {
@@ -2687,9 +2876,18 @@ function printThermalSlip(ref) {
       iframe.contentWindow.print();
     } catch (e) {
       console.error('Cetak gagal:', e);
-      Swal.fire({ icon:'error', text:'Gagal membuka dialog cetak. Coba unduh struk sebagai gambar sebagai alternatif.' });
+
+      Swal.fire({
+        icon: 'error',
+        text: 'Gagal membuka dialog cetak.'
+      });
     }
-    setTimeout(() => { const f = document.getElementById('rs-print-frame'); if (f) f.remove(); }, 1500);
+
+    setTimeout(() => {
+      const f = document.getElementById('rs-print-frame');
+      if (f) f.remove();
+    }, 1500);
+
   }, 300);
 }
 function downloadSlip(ref, name) {
@@ -2979,7 +3177,23 @@ function POSView({ user }) {
           {cart.length > 0 && (
             <div>
               <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', cursor:'pointer', borderTop:'1px solid #e0e0e0', marginTop:'12px', color:'var(--navy-primary)', fontWeight:'600', fontSize:'13px'}} onClick={() => setSlipOpen(!slipOpen)}><span><i className="fas fa-receipt"></i> Pratinjau Struk</span><i className={'fas fa-chevron-' + (slipOpen ? 'up' : 'down')}></i></div>
-              {slipOpen && (<div><ThermalSlip slipRef={slipRef} data={{ invoice_no: '(Transaksi Baru)', date: new Date().toISOString(), customer: customers.find(c => c.id == customerId)?.name || 'Pelanggan Umum', cashier: user.full_name, orderType, tableNo, items: cart, subtotal, discount: disc, grandTotal, paid, kembalian, due: due > 0 ? due : 0, payMethod, payRef, notes }} /><div className="ts-actions"><button className="ts-btn-print" onClick={() => printThermalSlip(slipRef)}><i className="fas fa-print"></i> Cetak</button><button className="ts-btn-dl" onClick={() => downloadSlip(slipRef, 'struk')}><i className="fas fa-download"></i> Simpan Gambar</button></div></div>)}
+              {slipOpen && (<div><ThermalSlip slipRef={slipRef} data={{ invoice_no: '(Transaksi Baru)', date: new Date().toISOString(), customer: customers.find(c => c.id == customerId)?.name || 'Pelanggan Umum', cashier: user.full_name, orderType, tableNo, items: cart, subtotal, discount: disc, grandTotal, paid, kembalian, due: due > 0 ? due : 0, payMethod, payRef, notes }} /><div className="ts-actions"><button className="ts-btn-print" onClick={() => printThermalSlip(slipRef, {
+                invoice_no: '(Transaksi Baru)',
+                date: new Date().toISOString(),
+                customer: customers.find(c => c.id == customerId)?.name || 'Pelanggan Umum',
+                cashier: user.full_name,
+                orderType,
+                tableNo,
+                items: cart,
+                subtotal,
+                discount: disc,
+                grandTotal,
+                paid,
+                kembalian,
+                due: due > 0 ? due : 0,
+                payMethod,
+                payRef,
+                notes })}><i className="fas fa-print"></i> Cetak </button><button className="ts-btn-dl" onClick={() => downloadSlip(slipRef, 'struk')}><i className="fas fa-download"></i> Simpan Gambar</button></div></div>)}
             </div>
           )}
         </div>
@@ -3026,7 +3240,7 @@ function InvoicePrintModal({ data, onClose }) {
         <div className="modal-body" style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
           <ThermalSlip slipRef={ref} data={data} />
           <div className="ts-actions" style={{marginTop:'16px'}}>
-            <button className="ts-btn-print" onClick={() => printThermalSlip(ref)}><i className="fas fa-print"></i> Cetak</button>
+            <button className="ts-btn-print" onClick={() => printThermalSlip(ref, data)}><i className="fas fa-print"></i> Cetak</button>
             <button className="ts-btn-dl" onClick={() => downloadSlip(ref, data.invoice_no || 'struk')}><i className="fas fa-download"></i> Simpan Gambar</button>
             <button className="ts-btn-dl" onClick={onClose}><i className="fas fa-times"></i> Tutup</button>
           </div>
