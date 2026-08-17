@@ -1,6 +1,7 @@
 /**
- * SWR (Stale While Revalidate) Cache Implementation
- */
+ * app.js
+ * Seluruh React Application*/
+
 
 var _swrCache = {};
 var _SWR_PFX = 'rpos_c_';
@@ -144,7 +145,7 @@ const { useState, useEffect, useRef } = React;
 function dtCleanup() { while ($.fn.dataTable.ext.search.length > 0) $.fn.dataTable.ext.search.pop(); }
 
 /* ── SearchableDropdown ── */
-
+/* ── Filter yang bisa dilipat — dipakai di semua halaman list, supaya tidak menghabiskan tinggi layar (brief poin 6) ── */
 function FilterPanel({ title = 'Filter', onClear, children, defaultOpen }) {
   const [open, setOpen] = useState(() => defaultOpen !== undefined ? defaultOpen : (typeof window !== 'undefined' ? window.innerWidth > 768 : true));
   return (
@@ -646,7 +647,7 @@ function MainContent({ activeMenu, user, onUserUpdate, onSettingsUpdate, openLed
     case 'expenses': return <ExpensesView user={user} />;
     case 'bulk_import': return <BulkImportPageView user={user} />;
     case 'settings': return <SettingsView user={user} onSettingsUpdate={onSettingsUpdate} />;
-    case 'printer_settings': return <PrinterSettingsView user={user} />;
+    case 'printer_settings': return <PrinterSettingsView />;
     case 'account': return <AccountView user={user} onUserUpdate={onUserUpdate} />;
     case 'due_reminders': return <DueRemindersView user={user} />;
     case 'reports': return <ReportsView user={user} />;
@@ -2493,7 +2494,7 @@ function CustPaymentModal({ customer, userId, role, onClose, onSaved }) {
 }
 
 /* ── Struk Thermal ── */
-/* ── Printer Thermal: koneksi langsung via Bluetooth (BLE) / USB ─── */
+/* ── Printer Thermal: koneksi langsung via Bluetooth (BLE) / USB ─────*/
 const PRINTER_BLE_SERVICES = ['000018f0-0000-1000-8000-00805f9b34fb', '0000ff00-0000-1000-8000-00805f9b34fb', '49535343-fe7d-4ae5-8fa9-9fafd205e455', '0000ffe0-0000-1000-8000-00805f9b34fb'];
 let _btDevice = null, _btChar = null, _usbDevice = null, _usbEndpoint = null;
 
@@ -2594,7 +2595,7 @@ function buildEscposReceipt(d, width) {
   out += '-'.repeat(width) + '\n';
   out += ESC + 'a' + '\x01';
   out += (_appSettings.invoice_footer || 'Terima kasih atas kunjungan Anda!') + '\n\n\n';
-  out += GS + 'V' + '\x42' + '\x00';
+  out += GS + 'V' + '\x42' + '\x00'; // potong kertas (kalau printernya support auto-cut)
   const bytes = new Uint8Array(out.length);
   for (let i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i) & 0xFF;
   return bytes;
@@ -2603,7 +2604,7 @@ async function printViaConnectedPrinter(receiptData, width) {
   const bytes = buildEscposReceipt(receiptData, width);
   try {
     if (_btChar) {
-      const chunkSize = 180;
+      const chunkSize = 180; // batas aman ukuran paket BLE
       for (let i = 0; i < bytes.length; i += chunkSize) {
         const chunk = bytes.slice(i, i + chunkSize);
         if (_btChar.properties.writeWithoutResponse) await _btChar.writeValueWithoutResponse(chunk);
@@ -2659,193 +2660,14 @@ function ThermalSlip({ data, slipRef }) {
     </div>
   );
 }
-async function printThermalSlip(ref, receiptData) {
-  if (!ref?.current) {
-    Swal.fire({
-      icon: 'error',
-      text: 'Struk belum siap, coba lagi sebentar.'
-    });
-    return;
-  }
+function printThermalSlip(ref) {
+  if (!ref?.current) { Swal.fire({ icon:'error', text:'Struk belum siap, coba lagi sebentar.' }); return; }
+  const styleTag = '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Courier New",monospace;font-size:12px;padding:8px;width:80mm;color:#333}.ts-header{text-align:center}.ts-logo{max-width:50px;max-height:50px;object-fit:contain;display:block;margin:0 auto 6px}.ts-biz{font-size:14px;font-weight:700}.ts-subtitle{font-size:10px;color:#888;letter-spacing:1px}.ts-div{border-top:1px dashed #bbb;margin:6px 0}.ts-info{font-size:11px;color:#555}.ts-info div{margin-bottom:2px}.ts-item{margin-bottom:6px;padding-bottom:4px;border-bottom:1px dotted #ddd}.ts-item:last-child{border-bottom:none}.ts-item-head{display:flex;justify-content:space-between;font-weight:700}.ts-item-sub{font-size:10px;color:#888}.ts-row{display:flex;justify-content:space-between;padding:2px 0}.ts-row.grand{font-weight:700;font-size:14px;border-top:1px dashed #333;border-bottom:1px dashed #333;padding:4px 0;margin:4px 0}.ts-row.due-row{color:#c62828;font-weight:700}.ts-row.paid-row{color:#2e7d32}.ts-footer{text-align:center;font-size:10px;color:#aaa}</style>';
 
-  // =========================================================
-  // PRIORITAS 1:
-  // Jika printer BLE / USB sudah terhubung,
-  // kirim langsung menggunakan ESC/POS.
-  // =========================================================
-
-  const connectedPrinter = getConnectedPrinterInfo();
-
-  if (connectedPrinter) {
-    const width = parseInt(
-      localStorage.getItem('printer_width') || '32',
-      10
-    );
-
-    if (!receiptData) {
-      Swal.fire({
-        icon: 'error',
-        text: 'Data struk tidak tersedia.'
-      });
-      return;
-    }
-
-    Swal.fire({
-      icon: 'info',
-      text: 'Mengirim struk ke printer...',
-      timer: 1200,
-      showConfirmButton: false
-    });
-
-    try {
-      const result = await printViaConnectedPrinter(
-        receiptData,
-        width
-      );
-
-      if (result.success) {
-        Swal.fire({
-          icon: 'success',
-          text: 'Struk berhasil dikirim ke printer.',
-          timer: 1500,
-          showConfirmButton: false
-        });
-      } else {
-        Swal.fire({
-          icon: 'error',
-          text: result.message || 'Gagal mencetak ke printer.'
-        });
-      }
-
-    } catch (e) {
-      console.error('Direct thermal print:', e);
-
-      Swal.fire({
-        icon: 'error',
-        text: 'Gagal mencetak ke printer: ' + e.message
-      });
-    }
-
-    return;
-  }
-
-  // =========================================================
-  // PRIORITAS 2:
-  // Tidak ada printer direct yang terhubung.
-  // Gunakan print dialog browser seperti sebelumnya.
-  // =========================================================
-
-  const styleTag = `
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: "Courier New", monospace;
-        font-size: 12px;
-        padding: 8px;
-        width: 80mm;
-        color: #333;
-      }
-
-      .ts-header {
-        text-align: center;
-      }
-
-      .ts-logo {
-        max-width: 50px;
-        max-height: 50px;
-        object-fit: contain;
-        display: block;
-        margin: 0 auto 6px;
-      }
-
-      .ts-biz {
-        font-size: 14px;
-        font-weight: 700;
-      }
-
-      .ts-subtitle {
-        font-size: 10px;
-        color: #888;
-        letter-spacing: 1px;
-      }
-
-      .ts-div {
-        border-top: 1px dashed #bbb;
-        margin: 6px 0;
-      }
-
-      .ts-info {
-        font-size: 11px;
-        color: #555;
-      }
-
-      .ts-info div {
-        margin-bottom: 2px;
-      }
-
-      .ts-item {
-        margin-bottom: 6px;
-        padding-bottom: 4px;
-        border-bottom: 1px dotted #ddd;
-      }
-
-      .ts-item:last-child {
-        border-bottom: none;
-      }
-
-      .ts-item-head {
-        display: flex;
-        justify-content: space-between;
-        font-weight: 700;
-      }
-
-      .ts-item-sub {
-        font-size: 10px;
-        color: #888;
-      }
-
-      .ts-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 2px 0;
-      }
-
-      .ts-row.grand {
-        font-weight: 700;
-        font-size: 14px;
-        border-top: 1px dashed #333;
-        border-bottom: 1px dashed #333;
-        padding: 4px 0;
-        margin: 4px 0;
-      }
-
-      .ts-row.due-row {
-        color: #c62828;
-        font-weight: 700;
-      }
-
-      .ts-row.paid-row {
-        color: #2e7d32;
-      }
-
-      .ts-footer {
-        text-align: center;
-        font-size: 10px;
-        color: #aaa;
-      }
-    </style>
-  `;
 
   const old = document.getElementById('rs-print-frame');
   if (old) old.remove();
-
   const iframe = document.createElement('iframe');
-
   iframe.id = 'rs-print-frame';
   iframe.style.position = 'fixed';
   iframe.style.right = '0';
@@ -2853,21 +2675,11 @@ async function printThermalSlip(ref, receiptData) {
   iframe.style.width = '0';
   iframe.style.height = '0';
   iframe.style.border = '0';
-
   document.body.appendChild(iframe);
 
   const doc = iframe.contentWindow.document;
-
   doc.open();
-
-  doc.write(
-    '<html><head><title>Struk</title>' +
-    styleTag +
-    '</head><body>' +
-    ref.current.innerHTML +
-    '</body></html>'
-  );
-
+  doc.write('<html><head><title>Struk</title>' + styleTag + '</head><body>' + ref.current.innerHTML + '</body></html>');
   doc.close();
 
   setTimeout(() => {
@@ -2876,18 +2688,9 @@ async function printThermalSlip(ref, receiptData) {
       iframe.contentWindow.print();
     } catch (e) {
       console.error('Cetak gagal:', e);
-
-      Swal.fire({
-        icon: 'error',
-        text: 'Gagal membuka dialog cetak.'
-      });
+      Swal.fire({ icon:'error', text:'Gagal membuka dialog cetak. Coba unduh struk sebagai gambar sebagai alternatif.' });
     }
-
-    setTimeout(() => {
-      const f = document.getElementById('rs-print-frame');
-      if (f) f.remove();
-    }, 1500);
-
+    setTimeout(() => { const f = document.getElementById('rs-print-frame'); if (f) f.remove(); }, 1500);
   }, 300);
 }
 function downloadSlip(ref, name) {
@@ -2996,13 +2799,17 @@ function POSView({ user }) {
   const selectedCust = customers.find(c => c.id == customerId);
   const canHutang = !!(selectedCust && String(selectedCust.phone || '').trim());
 
-
+  // Auto-isi jumlah bayar sesuai metode pembayaran (ditaruh SETELAH grandTotal dihitung —
+  // sebelumnya sempat di atas fungsi ini dan menyebabkan ReferenceError/crash karena
+  // memakai grandTotal sebelum konstanta itu didefinisikan).
   useEffect(() => {
     if (payMethod === 'tunai' || payMethod === 'hutang') setPaidAmt('');
     else setPaidAmt(String(grandTotal));
   }, [payMethod]);
 
-
+  // Kalau pelanggan diganti/dihapus sementara metode Hutang lagi dipilih, tapi pelanggan
+  // barunya tidak punya nomor telepon (atau dikosongkan jadi Pelanggan Umum), otomatis
+  // balik ke Tunai supaya tidak ada transaksi hutang tanpa kontak jelas.
   useEffect(() => {
     if (payMethod === 'hutang' && !canHutang) setPayMethod('tunai');
   }, [customerId]);
@@ -3177,23 +2984,7 @@ function POSView({ user }) {
           {cart.length > 0 && (
             <div>
               <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', cursor:'pointer', borderTop:'1px solid #e0e0e0', marginTop:'12px', color:'var(--navy-primary)', fontWeight:'600', fontSize:'13px'}} onClick={() => setSlipOpen(!slipOpen)}><span><i className="fas fa-receipt"></i> Pratinjau Struk</span><i className={'fas fa-chevron-' + (slipOpen ? 'up' : 'down')}></i></div>
-              {slipOpen && (<div><ThermalSlip slipRef={slipRef} data={{ invoice_no: '(Transaksi Baru)', date: new Date().toISOString(), customer: customers.find(c => c.id == customerId)?.name || 'Pelanggan Umum', cashier: user.full_name, orderType, tableNo, items: cart, subtotal, discount: disc, grandTotal, paid, kembalian, due: due > 0 ? due : 0, payMethod, payRef, notes }} /><div className="ts-actions"><button className="ts-btn-print" onClick={() => printThermalSlip(slipRef, {
-                invoice_no: '(Transaksi Baru)',
-                date: new Date().toISOString(),
-                customer: customers.find(c => c.id == customerId)?.name || 'Pelanggan Umum',
-                cashier: user.full_name,
-                orderType,
-                tableNo,
-                items: cart,
-                subtotal,
-                discount: disc,
-                grandTotal,
-                paid,
-                kembalian,
-                due: due > 0 ? due : 0,
-                payMethod,
-                payRef,
-                notes })}><i className="fas fa-print"></i> Cetak </button><button className="ts-btn-dl" onClick={() => downloadSlip(slipRef, 'struk')}><i className="fas fa-download"></i> Simpan Gambar</button></div></div>)}
+              {slipOpen && (<div><ThermalSlip slipRef={slipRef} data={{ invoice_no: '(Transaksi Baru)', date: new Date().toISOString(), customer: customers.find(c => c.id == customerId)?.name || 'Pelanggan Umum', cashier: user.full_name, orderType, tableNo, items: cart, subtotal, discount: disc, grandTotal, paid, kembalian, due: due > 0 ? due : 0, payMethod, payRef, notes }} /><div className="ts-actions"><button className="ts-btn-print" onClick={() => printThermalSlip(slipRef)}><i className="fas fa-print"></i> Cetak</button><button className="ts-btn-dl" onClick={() => downloadSlip(slipRef, 'struk')}><i className="fas fa-download"></i> Simpan Gambar</button></div></div>)}
             </div>
           )}
         </div>
@@ -3233,14 +3024,23 @@ function QuickAddCustomerModal({ onClose, onSave }) {
 
 function InvoicePrintModal({ data, onClose }) {
   const ref = useRef(null);
+  const [printing, setPrinting] = useState(false);
+  const printer = getConnectedPrinterInfo();
+  const handleDirectPrint = async () => {
+    setPrinting(true);
+    const r = await printViaConnectedPrinter(data, parseInt(localStorage.getItem('printer_width') || '32'));
+    setPrinting(false);
+    if (!r.success) Swal.fire({ icon:'error', text:r.message });
+  };
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{maxWidth:'380px', background:'#fafafa'}} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header"><h3><i className="fas fa-receipt"></i> {data.invoice_no}</h3><button className="close-btn" onClick={onClose}><i className="fas fa-times"></i></button></div>
         <div className="modal-body" style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
           <ThermalSlip slipRef={ref} data={data} />
-          <div className="ts-actions" style={{marginTop:'16px'}}>
-            <button className="ts-btn-print" onClick={() => printThermalSlip(ref, data)}><i className="fas fa-print"></i> Cetak</button>
+          {printer && <button className="ts-btn-print" style={{width:'100%', marginTop:'16px', justifyContent:'center', background:'#2e7d32'}} onClick={handleDirectPrint} disabled={printing}><i className="fab fa-bluetooth-b"></i> {printing ? 'Mengirim...' : 'Cetak ke ' + printer.name}</button>}
+          <div className="ts-actions" style={{marginTop:'10px'}}>
+            <button className="ts-btn-print" onClick={() => printThermalSlip(ref)}><i className="fas fa-print"></i> Cetak (Dialog Browser)</button>
             <button className="ts-btn-dl" onClick={() => downloadSlip(ref, data.invoice_no || 'struk')}><i className="fas fa-download"></i> Simpan Gambar</button>
             <button className="ts-btn-dl" onClick={onClose}><i className="fas fa-times"></i> Tutup</button>
           </div>
@@ -4108,7 +3908,7 @@ function AboutView() {
         <div className="about-title"><h1><i className="fas fa-utensils"></i> {BN()}</h1><p className="about-dev">Dikembangkan oleh <strong>Ahmad Galih Saputro</strong> (Tanpa Sorotan)</p></div>
       </div>
       <div className="about-card">
-        <h2><i className="fas fa-question-circle"></i>Aplikasi Apa Ini?</h2>
+        <h2><i className="fas fa-question-circle"></i> Apa itu Aplikasi Ini?</h2>
         <p>Ini adalah sistem Point of Sale (POS) yang dibuat khusus untuk restoran dan rumah makan. Digunakan untuk mengelola menu, mencatat transaksi, memantau stok, dan menjaga semuanya tetap rapi dalam satu tempat. Anggap saja ini seperti mesin kasir digital yang bisa Anda akses dari mana saja untuk menjalankan seluruh operasional restoran Anda.</p>
       </div>
       <div className="about-card">
